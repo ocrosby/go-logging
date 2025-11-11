@@ -2,6 +2,7 @@ package logging
 
 import (
 	"io"
+	"log/slog"
 	"os"
 	"regexp"
 )
@@ -22,6 +23,8 @@ type Config struct {
 	UseShortFile   bool
 	RedactPatterns []*regexp.Regexp
 	StaticFields   map[string]interface{}
+	Handler        slog.Handler
+	UseSlog        bool
 }
 
 type ConfigBuilder struct {
@@ -111,6 +114,17 @@ func (b *ConfigBuilder) WithStaticFields(fields map[string]interface{}) *ConfigB
 	for k, v := range fields {
 		b.config.StaticFields[k] = v
 	}
+	return b
+}
+
+func (b *ConfigBuilder) WithHandler(handler slog.Handler) *ConfigBuilder {
+	b.config.Handler = handler
+	b.config.UseSlog = true
+	return b
+}
+
+func (b *ConfigBuilder) UseSlog(use bool) *ConfigBuilder {
+	b.config.UseSlog = use
 	return b
 }
 

@@ -207,7 +207,7 @@ func (sl *standardLogger) Critical(msg string, args ...interface{}) {
 }
 
 func (sl *standardLogger) Fluent() FluentLogger {
-	return &fluentLoggerWrapper{logger: sl}
+	return &fluentLoggerWrapper{logger: Logger(sl)}
 }
 
 func (sl *standardLogger) TraceContext(ctx context.Context, msg string, args ...interface{}) {

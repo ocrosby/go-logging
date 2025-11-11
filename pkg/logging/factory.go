@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"log/slog"
 	"os"
 	"sync"
 )
@@ -72,6 +73,34 @@ func NewTextLogger(level Level) Logger {
 	config := NewConfig().
 		WithLevel(level).
 		WithTextFormat().
+		Build()
+	redactorChain := ProvideRedactorChain(config)
+	return ProvideLogger(config, redactorChain)
+}
+
+func NewWithHandler(handler slog.Handler) Logger {
+	config := NewConfig().
+		WithHandler(handler).
+		Build()
+	redactorChain := ProvideRedactorChain(config)
+	return ProvideLogger(config, redactorChain)
+}
+
+func NewSlogJSONLogger(level Level) Logger {
+	config := NewConfig().
+		WithLevel(level).
+		WithJSONFormat().
+		UseSlog(true).
+		Build()
+	redactorChain := ProvideRedactorChain(config)
+	return ProvideLogger(config, redactorChain)
+}
+
+func NewSlogTextLogger(level Level) Logger {
+	config := NewConfig().
+		WithLevel(level).
+		WithTextFormat().
+		UseSlog(true).
 		Build()
 	redactorChain := ProvideRedactorChain(config)
 	return ProvideLogger(config, redactorChain)

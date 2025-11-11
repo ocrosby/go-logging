@@ -32,6 +32,8 @@ A configurable, production-ready logging library for Go with support for structu
 
 - **Multiple Log Levels**: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL
 - **Multiple Output Formats**: Text and JSON
+- **Slog Integration**: Built on Go's standard `log/slog` for flexibility and extensibility
+- **Third-Party Handler Support**: Use any `slog.Handler` implementation (zerolog, zap, etc.)
 - **Fluent Interface**: Chain methods for expressive logging
 - **Request Tracing**: Built-in support for trace IDs, request IDs, and correlation IDs
 - **Structured Logging**: Add contextual fields to log entries
@@ -40,7 +42,7 @@ A configurable, production-ready logging library for Go with support for structu
 - **Thread-Safe**: Concurrent logging with proper synchronization
 - **Environment Configuration**: Configure from environment variables
 - **Dependency Injection**: Design follows SOLID principles for easy testing
-- **Zero Dependencies**: Only uses standard library (except for UUID generation)
+- **Backward Compatible**: Maintains existing API while adding slog support
 
 ## Installation
 
@@ -138,6 +140,29 @@ logger.Fluent().Info().
     Ctx(ctx).
     Str("operation", "fetch_user").
     Msg("Processing request")
+```
+
+### Slog Integration
+
+```go
+import (
+    "log/slog"
+    "github.com/ocrosby/go-logging/pkg/logging"
+)
+
+func main() {
+    // Use slog with default handler
+    logger := logging.NewSlogTextLogger(logging.InfoLevel)
+    logger.Info("Using slog backend")
+    
+    // Use custom slog handler
+    handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+        Level: slog.LevelDebug,
+        AddSource: true,
+    })
+    logger = logging.NewWithHandler(handler)
+    logger.Debug("Custom handler with source location")
+}
 ```
 
 ### HTTP Middleware
@@ -328,6 +353,16 @@ logger := logging.NewJSONLogger(logging.InfoLevel)
 // Create text logger
 logger := logging.NewTextLogger(logging.InfoLevel)
 
+// Create slog-based logger
+logger := logging.NewSlogTextLogger(logging.InfoLevel)
+logger := logging.NewSlogJSONLogger(logging.DebugLevel)
+
+// Create with custom slog handler
+handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+    Level: slog.LevelDebug,
+})
+logger := logging.NewWithHandler(handler)
+
 // Create with custom configuration
 config := logging.NewConfig().Build()
 logger := logging.NewStandardLogger(config)
@@ -369,6 +404,7 @@ See the `examples/` directory for complete working examples:
 - [`examples/basic/`](examples/basic/) - Basic logging usage
 - [`examples/fluent/`](examples/fluent/) - Fluent interface examples
 - [`examples/http-server/`](examples/http-server/) - HTTP middleware and tracing
+- [`examples/slog/`](examples/slog/) - Slog integration with custom handlers
 
 ## Testing
 
@@ -446,8 +482,10 @@ pkg/logging/
 ├── level.go            # Log level definitions
 ├── config.go           # Configuration with builder pattern
 ├── standard_logger.go  # Standard logger implementation
+├── slog_logger.go      # Slog-based logger implementation
 ├── fluent.go           # Fluent interface implementation
 ├── factory.go          # Factory functions
+├── providers.go        # Dependency injection providers
 ├── trace.go            # Request tracing utilities
 ├── middleware.go       # HTTP middleware
 ├── redactor.go         # Sensitive data redaction

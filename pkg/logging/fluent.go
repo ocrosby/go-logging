@@ -3,7 +3,7 @@ package logging
 import "context"
 
 type fluentLoggerWrapper struct {
-	logger *standardLogger
+	logger Logger
 }
 
 func (w *fluentLoggerWrapper) createEntry(level Level) *FluentEntry {

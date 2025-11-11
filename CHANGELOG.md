@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Slog integration with Go's standard `log/slog` library
+- New `slog_logger.go` implementing Logger interface with slog backend
+- Support for custom `slog.Handler` implementations
+- Factory functions: `NewSlogTextLogger()`, `NewSlogJSONLogger()`, `NewWithHandler()`
+- Configuration options: `WithHandler()` and `UseSlog()` in ConfigBuilder
+- Custom slog levels for TRACE (-8) and CRITICAL (12)
+- Example application demonstrating slog integration and third-party handlers
+- Documentation for using zerolog and zap handlers via slog
+
+### Changed
+- `fluentLoggerWrapper` now uses `Logger` interface instead of concrete `*standardLogger`
+- Providers updated to conditionally use slog-based logger when configured
+- README updated with slog integration examples and features
+
 ### Planned
 - Syslog support
 - File rotation support
