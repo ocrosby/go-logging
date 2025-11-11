@@ -1,0 +1,173 @@
+version: '3'
+
+vars:
+  PACKAGE: github.com/ocrosby/go-logging
+  COVERAGE_FILE: coverage.out
+  COVERAGE_HTML: coverage.html
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  install-tools:
+    desc: Install required development tools
+    cmds:
+      - go install go.uber.org/mock/mockgen@latest
+      - go install github.com/google/wire/cmd/wire@latest
+      - go install golang.org/x/tools/cmd/goimports@latest
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+  build:
+    desc: Build all packages
+    cmds:
+      - go build ./...
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test -v ./...
+
+  test-coverage:
+    desc: Run tests with coverage report
+    cmds:
+      - go test -v -coverprofile={{.COVERAGE_FILE}} ./...
+      - go tool cover -html={{.COVERAGE_FILE}} -o {{.COVERAGE_HTML}}
+    generates:
+      - "{{.COVERAGE_FILE}}"
+      - "{{.COVERAGE_HTML}}"
+
+  test-race:
+    desc: Run tests with race detector
+    cmds:
+      - go test -race -v ./...
+
+  bench:
+    desc: Run benchmarks
+    cmds:
+      - go test -bench=. -benchmem ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run ./...
+
+  lint-fix:
+    desc: Run golangci-lint with auto-fix
+    cmds:
+      - golangci-lint run --fix ./...
+
+  fmt:
+    desc: Format code
+    cmds:
+      - go fmt ./...
+      - goimports -w .
+
+  generate:
+    desc: Run go generate for all packages
+    cmds:
+      - go generate ./...
+
+  generate-mocks:
+    desc: Generate mock implementations with gomock
+    deps: [install-tools]
+    cmds:
+      - mockgen -source=pkg/logging/logger.go -destination=pkg/logging/mocks/mock_logger.go -package=mocks
+      - mockgen -source=pkg/logging/redactor.go -destination=pkg/logging/mocks/mock_redactor.go -package=mocks
+    sources:
+      - pkg/logging/logger.go
+      - pkg/logging/redactor.go
+    generates:
+      - pkg/logging/mocks/mock_logger.go
+      - pkg/logging/mocks/mock_redactor.go
+
+  generate-wire:
+    desc: Generate wire dependency injection code
+    deps: [install-tools]
+    dir: examples/di
+    cmds:
+      - wire
+    sources:
+      - wire.go
+    generates:
+      - wire_gen.go
+
+  clean:
+    desc: Clean build artifacts and generated files
+    cmds:
+      - rm -f {{.COVERAGE_FILE}}
+      - rm -f {{.COVERAGE_HTML}}
+      - go clean ./...
+
+  clean-mocks:
+    desc: Remove generated mock files
+    cmds:
+      - rm -f pkg/logging/mocks/mock_*.go
+
+  tidy:
+    desc: Tidy and verify go.mod
+    cmds:
+      - go mod tidy
+      - go mod verify
+
+  deps:
+    desc: Download dependencies
+    cmds:
+      - go mod download
+
+  update-deps:
+    desc: Update all dependencies
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+
+  run-basic:
+    desc: Run basic example
+    dir: examples/basic
+    cmds:
+      - go run main.go
+
+  run-fluent:
+    desc: Run fluent example
+    dir: examples/fluent
+    cmds:
+      - go run main.go
+
+  run-di:
+    desc: Run dependency injection example
+    dir: examples/di
+    deps: [generate-wire]
+    cmds:
+      - go run .
+
+  run-http:
+    desc: Run HTTP server example
+    dir: examples/http-server
+    cmds:
+      - go run main.go
+
+  check:
+    desc: Run all checks (format, lint, test, build)
+    cmds:
+      - task: fmt
+      - task: lint
+      - task: test
+      - task: build
+
+  ci:
+    desc: Run CI pipeline (used in continuous integration)
+    cmds:
+      - task: tidy
+      - task: generate-mocks
+      - task: generate-wire
+      - task: lint
+      - task: test-race
+      - task: build
+
+  all:
+    desc: Generate, build and test everything
+    cmds:
+      - task: generate-mocks
+      - task: generate-wire
+      - task: check

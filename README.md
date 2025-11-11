@@ -51,6 +51,48 @@ go get github.com/ocrosby/go-logging
 ### Requirements
 
 - Go 1.19 or higher
+- [Task](https://taskfile.dev) (optional, for using the Taskfile)
+
+### Setup
+
+This project uses [Task](https://taskfile.dev) for task automation. To set up your development environment:
+
+1. Install Task (if not already installed):
+   ```bash
+   # macOS
+   brew install go-task/tap/go-task
+   
+   # Linux
+   sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+   
+   # Windows
+   choco install go-task
+   ```
+
+2. Install development tools:
+   ```bash
+   task install-tools
+   ```
+
+3. Download dependencies:
+   ```bash
+   task deps
+   ```
+
+4. Build the project:
+   ```bash
+   task build
+   ```
+
+5. Run tests:
+   ```bash
+   task test
+   ```
+
+6. View all available tasks:
+   ```bash
+   task
+   ```
 
 ## Quick Start
 
@@ -330,6 +372,34 @@ See the `examples/` directory for complete working examples:
 
 ## Testing
 
+### Using Task
+
+Run the test suite:
+
+```bash
+task test
+```
+
+Run tests with coverage:
+
+```bash
+task test-coverage
+```
+
+Run tests with race detector:
+
+```bash
+task test-race
+```
+
+Run benchmarks:
+
+```bash
+task bench
+```
+
+### Using Go directly
+
 Run the test suite:
 
 ```bash
@@ -392,20 +462,24 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/yourusername/go-logging.git`
-3. Create a branch: `git checkout -b feature/my-feature`
-4. Make your changes
-5. Run tests: `go test ./...`
-6. Commit your changes: `git commit -am 'Add new feature'`
-7. Push to the branch: `git push origin feature/my-feature`
-8. Submit a pull request
+3. Set up development environment: `task install-tools && task deps`
+4. Create a branch: `git checkout -b feature/my-feature`
+5. Make your changes
+6. Format and lint code: `task fmt && task lint`
+7. Run tests: `task test`
+8. Commit your changes: `git commit -am 'Add new feature'`
+9. Push to the branch: `git push origin feature/my-feature`
+10. Submit a pull request
 
 ### Code Style
 
 - Follow standard Go conventions and idioms
-- Run `go fmt` before committing
-- Ensure all tests pass
+- Format code with `task fmt` before committing
+- Run linter with `task lint` to check code quality
+- Ensure all tests pass with `task test`
 - Add tests for new functionality
 - Update documentation as needed
+- Run `task check` to verify format, lint, tests, and build all pass
 
 ## Changelog
 

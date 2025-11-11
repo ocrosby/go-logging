@@ -17,7 +17,8 @@ func TestFluentInterface_BasicUsage(t *testing.T) {
 		WithJSONFormat().
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	logger.Fluent().Info().
 		Str("user", "john").
@@ -48,7 +49,8 @@ func TestFluentInterface_WithTraceID(t *testing.T) {
 		WithJSONFormat().
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	logger.Fluent().Info().
 		TraceID("trace-123").
@@ -74,7 +76,8 @@ func TestFluentInterface_WithContext(t *testing.T) {
 		WithJSONFormat().
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	ctx := WithTraceID(context.Background(), "ctx-trace-456")
 	ctx = WithRequestID(ctx, "req-789")
@@ -107,7 +110,8 @@ func TestFluentInterface_WithError(t *testing.T) {
 		WithJSONFormat().
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	testErr := errors.New("test error")
 
@@ -134,7 +138,8 @@ func TestFluentInterface_Msgf(t *testing.T) {
 		WithOutput(buf).
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	logger.Fluent().Info().
 		Str("name", "test").
@@ -155,7 +160,8 @@ func TestFluentInterface_MultipleFields(t *testing.T) {
 		WithJSONFormat().
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	fields := map[string]interface{}{
 		"field1": "value1",
@@ -194,8 +200,8 @@ func TestFluentInterface_AllLevels(t *testing.T) {
 		WithOutput(buf).
 		WithJSONFormat().
 		Build()
-
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	levels := []struct {
 		name  string

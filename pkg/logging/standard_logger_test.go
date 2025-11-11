@@ -15,7 +15,8 @@ func TestStandardLogger_Levels(t *testing.T) {
 		WithOutput(buf).
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	logger.Trace("trace message")
 	logger.Debug("debug message")
@@ -50,7 +51,8 @@ func TestStandardLogger_JSONFormat(t *testing.T) {
 		WithJSONFormat().
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 	logger.Info("test message")
 
 	output := buf.String()
@@ -79,7 +81,8 @@ func TestStandardLogger_WithFields(t *testing.T) {
 		WithJSONFormat().
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 	logger = logger.WithField("user_id", "12345")
 	logger.Info("test message")
 
@@ -103,7 +106,8 @@ func TestStandardLogger_WithMultipleFields(t *testing.T) {
 		WithJSONFormat().
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 	logger = logger.WithFields(map[string]interface{}{
 		"request_id": "req-123",
 		"user_id":    "user-456",
@@ -133,7 +137,8 @@ func TestStandardLogger_Context(t *testing.T) {
 		WithJSONFormat().
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 	ctx := WithRequestID(context.Background(), "req-789")
 	logger.InfoContext(ctx, "test message")
 
@@ -156,7 +161,8 @@ func TestStandardLogger_SetLevel(t *testing.T) {
 		WithOutput(buf).
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	logger.Debug("should not appear")
 	if buf.Len() > 0 {
@@ -176,7 +182,8 @@ func TestStandardLogger_IsLevelEnabled(t *testing.T) {
 		WithLevel(InfoLevel).
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 
 	if logger.IsLevelEnabled(DebugLevel) {
 		t.Error("Debug should not be enabled when level is Info")
@@ -196,7 +203,8 @@ func TestStandardLogger_Formatting(t *testing.T) {
 		WithOutput(buf).
 		Build()
 
-	logger := NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	logger := NewStandardLogger(config, redactorChain)
 	logger.Info("test %s %d", "message", 42)
 
 	output := buf.String()

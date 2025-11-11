@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.8
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Run golangci-lint
+        run: golangci-lint run ./...
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.24', '1.25']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Install tools
+        run: |
+          go install go.uber.org/mock/mockgen@latest
+          go install github.com/google/wire/cmd/wire@latest
+
+      - name: Generate mocks
+        run: |
+          mockgen -source=pkg/logging/logger.go -destination=pkg/logging/mocks/mock_logger.go -package=mocks
+          mockgen -source=pkg/logging/redactor.go -destination=pkg/logging/mocks/mock_redactor.go -package=mocks
+
+      - name: Generate wire
+        run: |
+          cd examples/di
+          wire
+
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Upload coverage to Codecov
+        if: matrix.go-version == '1.25'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.out
+          flags: unittests
+          fail_ci_if_error: false
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Build examples
+        run: |
+          go build -v ./examples/basic
+          go build -v ./examples/fluent
+          go build -v ./examples/http-server
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Install tools
+        run: |
+          go install go.uber.org/mock/mockgen@latest
+          go install github.com/google/wire/cmd/wire@latest
+
+      - name: Generate code
+        run: |
+          mockgen -source=pkg/logging/logger.go -destination=pkg/logging/mocks/mock_logger.go -package=mocks
+          mockgen -source=pkg/logging/redactor.go -destination=pkg/logging/mocks/mock_redactor.go -package=mocks
+          cd examples/di && wire
+
+      - name: Run examples
+        run: |
+          timeout 5s go run ./examples/basic/main.go || true
+          timeout 5s go run ./examples/fluent/main.go || true
+          timeout 5s go run ./examples/di/. || true

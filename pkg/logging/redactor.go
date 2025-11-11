@@ -6,6 +6,11 @@ type Redactor interface {
 	Redact(input string) string
 }
 
+type RedactorChainInterface interface {
+	AddRedactor(redactor Redactor)
+	Redact(input string) string
+}
+
 type RegexRedactor struct {
 	pattern     *regexp.Regexp
 	replacement string

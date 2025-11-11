@@ -30,3 +30,6 @@ go.work
 # Build artifacts
 /bin/
 /dist/
+
+# Task runner
+.task/

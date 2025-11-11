@@ -17,10 +17,10 @@ type standardLogger struct {
 	fields        map[string]interface{}
 	textLoggers   map[Level]*log.Logger
 	discard       *log.Logger
-	redactorChain *RedactorChain
+	redactorChain RedactorChainInterface
 }
 
-func NewStandardLogger(config *Config) Logger {
+func NewStandardLogger(config *Config, redactorChain RedactorChainInterface) Logger {
 	if config == nil {
 		config = NewConfig().Build()
 	}
@@ -30,7 +30,7 @@ func NewStandardLogger(config *Config) Logger {
 		fields:        make(map[string]interface{}),
 		textLoggers:   make(map[Level]*log.Logger),
 		discard:       log.New(io.Discard, "", 0),
-		redactorChain: NewRedactorChain(config.RedactPatterns...),
+		redactorChain: redactorChain,
 	}
 
 	if config.Format == TextFormat {
@@ -100,7 +100,7 @@ func (sl *standardLogger) logText(level Level, message string) {
 	if logger == nil {
 		logger = sl.discard
 	}
-	logger.Output(3, message)
+	_ = logger.Output(3, message)
 }
 
 func (sl *standardLogger) logJSON(level Level, message string, ctx context.Context) {

@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/ocrosby/go-logging/pkg/logging"
 	"net/http"
+
+	"github.com/ocrosby/go-logging/pkg/logging"
 )
 
 func main() {
@@ -11,8 +12,8 @@ func main() {
 		WithLevel(logging.InfoLevel).
 		WithJSONFormat().
 		Build()
-
-	logger := logging.NewStandardLogger(config)
+	redactorChain := logging.ProvideRedactorChain(config)
+	logger := logging.NewStandardLogger(config, redactorChain)
 
 	mux := http.NewServeMux()
 

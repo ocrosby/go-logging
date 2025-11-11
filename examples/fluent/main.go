@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+
 	"github.com/ocrosby/go-logging/pkg/logging"
 )
 
@@ -10,8 +11,8 @@ func main() {
 		WithLevel(logging.DebugLevel).
 		WithJSONFormat().
 		Build()
-
-	logger := logging.NewStandardLogger(config)
+	redactorChain := logging.ProvideRedactorChain(config)
+	logger := logging.NewStandardLogger(config, redactorChain)
 
 	logger.Fluent().Info().
 		Str("service", "fluent-example").

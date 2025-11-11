@@ -12,10 +12,9 @@ var (
 
 func GetDefaultLogger() Logger {
 	once.Do(func() {
-		config := NewConfig().
-			FromEnvironment().
-			Build()
-		defaultLogger = NewStandardLogger(config)
+		config := ProvideConfig()
+		redactorChain := ProvideRedactorChain(config)
+		defaultLogger = ProvideLogger(config, redactorChain)
 	})
 	return defaultLogger
 }
@@ -31,28 +30,33 @@ func New(options ...func(*ConfigBuilder)) Logger {
 		option(builder)
 	}
 
-	return NewStandardLogger(builder.Build())
+	config := builder.Build()
+	redactorChain := ProvideRedactorChain(config)
+	return ProvideLogger(config, redactorChain)
 }
 
 func NewFromEnvironment() Logger {
 	config := NewConfig().
 		FromEnvironment().
 		Build()
-	return NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	return ProvideLogger(config, redactorChain)
 }
 
 func NewWithLevel(level Level) Logger {
 	config := NewConfig().
 		WithLevel(level).
 		Build()
-	return NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	return ProvideLogger(config, redactorChain)
 }
 
 func NewWithLevelString(level string) Logger {
 	config := NewConfig().
 		WithLevelString(level).
 		Build()
-	return NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	return ProvideLogger(config, redactorChain)
 }
 
 func NewJSONLogger(level Level) Logger {
@@ -60,7 +64,8 @@ func NewJSONLogger(level Level) Logger {
 		WithLevel(level).
 		WithJSONFormat().
 		Build()
-	return NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	return ProvideLogger(config, redactorChain)
 }
 
 func NewTextLogger(level Level) Logger {
@@ -68,7 +73,8 @@ func NewTextLogger(level Level) Logger {
 		WithLevel(level).
 		WithTextFormat().
 		Build()
-	return NewStandardLogger(config)
+	redactorChain := ProvideRedactorChain(config)
+	return ProvideLogger(config, redactorChain)
 }
 
 func Trace(msg string, args ...interface{}) {
