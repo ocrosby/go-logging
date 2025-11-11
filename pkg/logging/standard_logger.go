@@ -104,6 +104,15 @@ func (sl *standardLogger) logText(level Level, message string) {
 }
 
 func (sl *standardLogger) logJSON(level Level, message string, ctx context.Context) {
+	entry := sl.createBaseEntry(level, message)
+	sl.addFileInfo(entry)
+	sl.addStaticFields(entry)
+	sl.addInstanceFields(entry)
+	sl.addContextFields(entry, ctx)
+	sl.writeJSON(entry)
+}
+
+func (sl *standardLogger) createBaseEntry(level Level, message string) map[string]interface{} {
 	entry := make(map[string]interface{})
 
 	if sl.config.IncludeTime {
@@ -113,36 +122,54 @@ func (sl *standardLogger) logJSON(level Level, message string, ctx context.Conte
 	entry["level"] = level.String()
 	entry["message"] = message
 
-	if sl.config.IncludeFile {
-		if _, file, line, ok := runtime.Caller(3); ok {
-			if sl.config.UseShortFile {
-				short := file
-				for i := len(file) - 1; i > 0; i-- {
-					if file[i] == '/' {
-						short = file[i+1:]
-						break
-					}
-				}
-				file = short
-			}
-			entry["file"] = fmt.Sprintf("%s:%d", file, line)
-		}
+	return entry
+}
+
+func (sl *standardLogger) addFileInfo(entry map[string]interface{}) {
+	if !sl.config.IncludeFile {
+		return
 	}
 
+	if _, file, line, ok := runtime.Caller(4); ok {
+		entry["file"] = sl.formatFilename(file, line)
+	}
+}
+
+func (sl *standardLogger) formatFilename(file string, line int) string {
+	if sl.config.UseShortFile {
+		for i := len(file) - 1; i > 0; i-- {
+			if file[i] == '/' {
+				file = file[i+1:]
+				break
+			}
+		}
+	}
+	return fmt.Sprintf("%s:%d", file, line)
+}
+
+func (sl *standardLogger) addStaticFields(entry map[string]interface{}) {
 	for k, v := range sl.config.StaticFields {
 		entry[k] = v
 	}
+}
 
+func (sl *standardLogger) addInstanceFields(entry map[string]interface{}) {
 	for k, v := range sl.fields {
 		entry[k] = v
 	}
+}
 
-	if ctx != nil {
-		if reqID, ok := ctx.Value("request_id").(string); ok {
-			entry["request_id"] = reqID
-		}
+func (sl *standardLogger) addContextFields(entry map[string]interface{}, ctx context.Context) {
+	if ctx == nil {
+		return
 	}
 
+	if reqID, ok := GetRequestID(ctx); ok {
+		entry["request_id"] = reqID
+	}
+}
+
+func (sl *standardLogger) writeJSON(entry map[string]interface{}) {
 	jsonBytes, err := json.Marshal(entry)
 	if err != nil {
 		return

@@ -6,54 +6,49 @@ type fluentLoggerWrapper struct {
 	logger *standardLogger
 }
 
-func (w *fluentLoggerWrapper) Trace() *FluentEntry {
+func (w *fluentLoggerWrapper) createEntry(level Level) *FluentEntry {
 	return &FluentEntry{
 		logger: w.logger,
-		level:  TraceLevel,
+		level:  level,
 		fields: make(map[string]interface{}),
 	}
+}
+
+func (w *fluentLoggerWrapper) Trace() *FluentEntry {
+	return w.createEntry(TraceLevel)
 }
 
 func (w *fluentLoggerWrapper) Debug() *FluentEntry {
-	return &FluentEntry{
-		logger: w.logger,
-		level:  DebugLevel,
-		fields: make(map[string]interface{}),
-	}
+	return w.createEntry(DebugLevel)
 }
 
 func (w *fluentLoggerWrapper) Info() *FluentEntry {
-	return &FluentEntry{
-		logger: w.logger,
-		level:  InfoLevel,
-		fields: make(map[string]interface{}),
-	}
+	return w.createEntry(InfoLevel)
 }
 
 func (w *fluentLoggerWrapper) Warn() *FluentEntry {
-	return &FluentEntry{
-		logger: w.logger,
-		level:  WarnLevel,
-		fields: make(map[string]interface{}),
-	}
+	return w.createEntry(WarnLevel)
 }
 
 func (w *fluentLoggerWrapper) Error() *FluentEntry {
-	return &FluentEntry{
-		logger: w.logger,
-		level:  ErrorLevel,
-		fields: make(map[string]interface{}),
-	}
+	return w.createEntry(ErrorLevel)
 }
 
 func (w *fluentLoggerWrapper) Critical() *FluentEntry {
-	return &FluentEntry{
-		logger: w.logger,
-		level:  CriticalLevel,
-		fields: make(map[string]interface{}),
-	}
+	return w.createEntry(CriticalLevel)
 }
 
+// FluentEntry represents a fluent logging entry that can be configured
+// with structured fields before being output. Methods can be chained
+// until Msg() or Msgf() is called to output the log entry.
+//
+// Example:
+//
+//	logger.Fluent().Info().
+//		Str("service", "api").
+//		Int("port", 8080).
+//		Bool("ssl", true).
+//		Msg("Server started")
 type FluentEntry struct {
 	logger  Logger
 	level   Level
@@ -62,11 +57,13 @@ type FluentEntry struct {
 	traceID string
 }
 
+// Field adds a key-value pair to the log entry and returns the entry for chaining.
 func (e *FluentEntry) Field(key string, value interface{}) *FluentEntry {
 	e.fields[key] = value
 	return e
 }
 
+// Fields adds multiple key-value pairs to the log entry and returns the entry for chaining.
 func (e *FluentEntry) Fields(fields map[string]interface{}) *FluentEntry {
 	for k, v := range fields {
 		e.fields[k] = v
@@ -74,26 +71,32 @@ func (e *FluentEntry) Fields(fields map[string]interface{}) *FluentEntry {
 	return e
 }
 
+// Str adds a string field to the log entry and returns the entry for chaining.
 func (e *FluentEntry) Str(key, value string) *FluentEntry {
 	e.fields[key] = value
 	return e
 }
 
+// Int adds an integer field to the log entry and returns the entry for chaining.
 func (e *FluentEntry) Int(key string, value int) *FluentEntry {
 	e.fields[key] = value
 	return e
 }
 
+// Int64 adds a 64-bit integer field to the log entry and returns the entry for chaining.
 func (e *FluentEntry) Int64(key string, value int64) *FluentEntry {
 	e.fields[key] = value
 	return e
 }
 
+// Bool adds a boolean field to the log entry and returns the entry for chaining.
 func (e *FluentEntry) Bool(key string, value bool) *FluentEntry {
 	e.fields[key] = value
 	return e
 }
 
+// Err adds an error field to the log entry and returns the entry for chaining.
+// If err is nil, no field is added.
 func (e *FluentEntry) Err(err error) *FluentEntry {
 	if err != nil {
 		e.fields["error"] = err.Error()
@@ -101,12 +104,21 @@ func (e *FluentEntry) Err(err error) *FluentEntry {
 	return e
 }
 
+// TraceID adds a trace identifier to the log entry and returns the entry for chaining.
+// The trace ID will appear as "trace_id" in the output.
 func (e *FluentEntry) TraceID(id string) *FluentEntry {
 	e.traceID = id
 	e.fields["trace_id"] = id
 	return e
 }
 
+// Ctx adds context information to the log entry and returns the entry for chaining.
+// Automatically extracts trace_id, request_id, and correlation_id from the context if present.
+//
+// Example:
+//
+//	ctx := logging.WithTraceID(context.Background(), "trace-123")
+//	logger.Fluent().Info().Ctx(ctx).Msg("Processing request")
 func (e *FluentEntry) Ctx(ctx context.Context) *FluentEntry {
 	e.ctx = ctx
 
@@ -123,90 +135,65 @@ func (e *FluentEntry) Ctx(ctx context.Context) *FluentEntry {
 	return e
 }
 
+// Msg outputs the log entry with the specified message.
+// This is the terminal method that actually writes the log.
 func (e *FluentEntry) Msg(msg string) {
 	logger := e.logger.WithFields(e.fields)
-
-	if e.ctx != nil {
-		e.logWithContext(logger, msg)
-	} else {
-		e.logDirect(logger, msg)
-	}
+	e.dispatch(logger, msg, nil)
 }
 
+// Msgf outputs the log entry with a formatted message.
+// This is the terminal method that actually writes the log.
+//
+// Example:
+//
+//	logger.Fluent().Info().
+//		Str("user", username).
+//		Msgf("User %s logged in at %s", username, time.Now())
 func (e *FluentEntry) Msgf(format string, args ...interface{}) {
 	logger := e.logger.WithFields(e.fields)
+	e.dispatch(logger, format, args)
+}
 
+type levelMethod func(string, ...interface{})
+type contextLevelMethod func(context.Context, string, ...interface{})
+
+var levelMethodMap = map[Level]func(Logger) levelMethod{
+	TraceLevel:    func(l Logger) levelMethod { return l.Trace },
+	DebugLevel:    func(l Logger) levelMethod { return l.Debug },
+	InfoLevel:     func(l Logger) levelMethod { return l.Info },
+	WarnLevel:     func(l Logger) levelMethod { return l.Warn },
+	ErrorLevel:    func(l Logger) levelMethod { return l.Error },
+	CriticalLevel: func(l Logger) levelMethod { return l.Critical },
+}
+
+var contextLevelMethodMap = map[Level]func(Logger) contextLevelMethod{
+	TraceLevel:    func(l Logger) contextLevelMethod { return l.TraceContext },
+	DebugLevel:    func(l Logger) contextLevelMethod { return l.DebugContext },
+	InfoLevel:     func(l Logger) contextLevelMethod { return l.InfoContext },
+	WarnLevel:     func(l Logger) contextLevelMethod { return l.WarnContext },
+	ErrorLevel:    func(l Logger) contextLevelMethod { return l.ErrorContext },
+	CriticalLevel: func(l Logger) contextLevelMethod { return l.CriticalContext },
+}
+
+func (e *FluentEntry) dispatch(logger Logger, format string, args []interface{}) {
 	if e.ctx != nil {
-		e.logWithContextf(logger, format, args...)
+		if methodGetter, ok := contextLevelMethodMap[e.level]; ok {
+			method := methodGetter(logger)
+			if args == nil {
+				method(e.ctx, format)
+			} else {
+				method(e.ctx, format, args...)
+			}
+		}
 	} else {
-		e.logDirectf(logger, format, args...)
-	}
-}
-
-func (e *FluentEntry) logWithContext(logger Logger, msg string) {
-	switch e.level {
-	case TraceLevel:
-		logger.TraceContext(e.ctx, msg)
-	case DebugLevel:
-		logger.DebugContext(e.ctx, msg)
-	case InfoLevel:
-		logger.InfoContext(e.ctx, msg)
-	case WarnLevel:
-		logger.WarnContext(e.ctx, msg)
-	case ErrorLevel:
-		logger.ErrorContext(e.ctx, msg)
-	case CriticalLevel:
-		logger.CriticalContext(e.ctx, msg)
-	}
-}
-
-func (e *FluentEntry) logWithContextf(logger Logger, format string, args ...interface{}) {
-	switch e.level {
-	case TraceLevel:
-		logger.TraceContext(e.ctx, format, args...)
-	case DebugLevel:
-		logger.DebugContext(e.ctx, format, args...)
-	case InfoLevel:
-		logger.InfoContext(e.ctx, format, args...)
-	case WarnLevel:
-		logger.WarnContext(e.ctx, format, args...)
-	case ErrorLevel:
-		logger.ErrorContext(e.ctx, format, args...)
-	case CriticalLevel:
-		logger.CriticalContext(e.ctx, format, args...)
-	}
-}
-
-func (e *FluentEntry) logDirect(logger Logger, msg string) {
-	switch e.level {
-	case TraceLevel:
-		logger.Trace(msg)
-	case DebugLevel:
-		logger.Debug(msg)
-	case InfoLevel:
-		logger.Info(msg)
-	case WarnLevel:
-		logger.Warn(msg)
-	case ErrorLevel:
-		logger.Error(msg)
-	case CriticalLevel:
-		logger.Critical(msg)
-	}
-}
-
-func (e *FluentEntry) logDirectf(logger Logger, format string, args ...interface{}) {
-	switch e.level {
-	case TraceLevel:
-		logger.Trace(format, args...)
-	case DebugLevel:
-		logger.Debug(format, args...)
-	case InfoLevel:
-		logger.Info(format, args...)
-	case WarnLevel:
-		logger.Warn(format, args...)
-	case ErrorLevel:
-		logger.Error(format, args...)
-	case CriticalLevel:
-		logger.Critical(format, args...)
+		if methodGetter, ok := levelMethodMap[e.level]; ok {
+			method := methodGetter(logger)
+			if args == nil {
+				method(format)
+			} else {
+				method(format, args...)
+			}
+		}
 	}
 }

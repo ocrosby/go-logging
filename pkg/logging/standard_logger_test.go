@@ -134,7 +134,7 @@ func TestStandardLogger_Context(t *testing.T) {
 		Build()
 
 	logger := NewStandardLogger(config)
-	ctx := context.WithValue(context.Background(), "request_id", "req-789")
+	ctx := WithRequestID(context.Background(), "req-789")
 	logger.InfoContext(ctx, "test message")
 
 	output := buf.String()
