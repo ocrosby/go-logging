@@ -10,12 +10,6 @@ type HandlerFactory interface {
 	Create(output interface{}) slog.Handler
 }
 
-type handlerFactoryFunc func(interface{}) slog.Handler
-
-func (f handlerFactoryFunc) Create(output interface{}) slog.Handler {
-	return f(output)
-}
-
 type MultiHandler struct {
 	handlers []slog.Handler
 	mu       sync.RWMutex

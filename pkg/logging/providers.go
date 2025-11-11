@@ -71,20 +71,17 @@ func NewSlogLoggerFromConfig(config *Config, redactorChain RedactorChainInterfac
 }
 
 func levelToSlogLevel(level Level) slog.Level {
-	switch level {
-	case TraceLevel:
-		return LevelTrace
-	case DebugLevel:
-		return slog.LevelDebug
-	case InfoLevel:
-		return slog.LevelInfo
-	case WarnLevel:
-		return slog.LevelWarn
-	case ErrorLevel:
-		return slog.LevelError
-	case CriticalLevel:
-		return LevelCritical
-	default:
-		return slog.LevelInfo
+	levelMap := map[Level]slog.Level{
+		TraceLevel:    LevelTrace,
+		DebugLevel:    slog.LevelDebug,
+		InfoLevel:     slog.LevelInfo,
+		WarnLevel:     slog.LevelWarn,
+		ErrorLevel:    slog.LevelError,
+		CriticalLevel: LevelCritical,
 	}
+
+	if slogLevel, ok := levelMap[level]; ok {
+		return slogLevel
+	}
+	return slog.LevelInfo
 }
