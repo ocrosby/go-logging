@@ -257,30 +257,42 @@ func (ul *unifiedLogger) logSlog(ctx context.Context, level Level, message strin
 	}
 
 	slogLevel := ul.levelToSlog(level)
-	logAttrs := make([]slog.Attr, 0, len(ul.fields)+len(ul.config.Core.StaticFields)+1)
+	logAttrs := ul.buildSlogAttrs(ctx)
+	ul.slogLogger.LogAttrs(ctx, slogLevel, message, logAttrs...)
+}
 
-	// Add static fields
+func (ul *unifiedLogger) buildSlogAttrs(ctx context.Context) []slog.Attr {
+	logAttrs := make([]slog.Attr, 0, len(ul.fields)+len(ul.config.Core.StaticFields)+3)
+
+	ul.addStaticFieldAttrs(&logAttrs)
+	ul.addInstanceFieldAttrs(&logAttrs)
+	ul.addContextFieldAttrs(ctx, &logAttrs)
+
+	return logAttrs
+}
+
+func (ul *unifiedLogger) addStaticFieldAttrs(logAttrs *[]slog.Attr) {
 	for k, v := range ul.config.Core.StaticFields {
-		logAttrs = append(logAttrs, slog.Any(k, v))
+		*logAttrs = append(*logAttrs, slog.Any(k, v))
 	}
+}
 
-	// Add instance fields
+func (ul *unifiedLogger) addInstanceFieldAttrs(logAttrs *[]slog.Attr) {
 	for k, v := range ul.fields {
-		logAttrs = append(logAttrs, slog.Any(k, v))
+		*logAttrs = append(*logAttrs, slog.Any(k, v))
 	}
+}
 
-	// Add context fields using the correct context keys
+func (ul *unifiedLogger) addContextFieldAttrs(ctx context.Context, logAttrs *[]slog.Attr) {
 	if requestID, ok := GetRequestID(ctx); ok && requestID != "" {
-		logAttrs = append(logAttrs, slog.String("request_id", requestID))
+		*logAttrs = append(*logAttrs, slog.String("request_id", requestID))
 	}
 	if traceID, ok := GetTraceID(ctx); ok && traceID != "" {
-		logAttrs = append(logAttrs, slog.String("trace_id", traceID))
+		*logAttrs = append(*logAttrs, slog.String("trace_id", traceID))
 	}
 	if correlationID, ok := GetCorrelationID(ctx); ok && correlationID != "" {
-		logAttrs = append(logAttrs, slog.String("correlation_id", correlationID))
+		*logAttrs = append(*logAttrs, slog.String("correlation_id", correlationID))
 	}
-
-	ul.slogLogger.LogAttrs(ctx, slogLevel, message, logAttrs...)
 }
 
 func (ul *unifiedLogger) logText(level Level, message string) {

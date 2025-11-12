@@ -42,32 +42,38 @@ func ExtractContextFields(ctx context.Context) ContextFields {
 
 	fields := ContextFields{}
 
-	// These functions are imported from the parent package
-	// We'll need to define the context key extraction logic here
-	// to avoid circular imports
-
-	// Extract trace ID using the same contextKey type as the parent package
-	if val := ctx.Value(contextKey("trace_id")); val != nil {
-		if traceID, ok := val.(string); ok {
-			fields.TraceID = traceID
-		}
-	}
-
-	// Extract request ID
-	if val := ctx.Value(contextKey("request_id")); val != nil {
-		if requestID, ok := val.(string); ok {
-			fields.RequestID = requestID
-		}
-	}
-
-	// Extract correlation ID
-	if val := ctx.Value(contextKey("correlation_id")); val != nil {
-		if correlationID, ok := val.(string); ok {
-			fields.CorrelationID = correlationID
-		}
-	}
+	fields.TraceID = extractTraceID(ctx)
+	fields.RequestID = extractRequestID(ctx)
+	fields.CorrelationID = extractCorrelationID(ctx)
 
 	return fields
+}
+
+func extractTraceID(ctx context.Context) string {
+	if val := ctx.Value(contextKey("trace_id")); val != nil {
+		if traceID, ok := val.(string); ok {
+			return traceID
+		}
+	}
+	return ""
+}
+
+func extractRequestID(ctx context.Context) string {
+	if val := ctx.Value(contextKey("request_id")); val != nil {
+		if requestID, ok := val.(string); ok {
+			return requestID
+		}
+	}
+	return ""
+}
+
+func extractCorrelationID(ctx context.Context) string {
+	if val := ctx.Value(contextKey("correlation_id")); val != nil {
+		if correlationID, ok := val.(string); ok {
+			return correlationID
+		}
+	}
+	return ""
 }
 
 // Context keys (duplicated to avoid circular import)

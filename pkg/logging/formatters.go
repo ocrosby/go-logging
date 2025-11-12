@@ -27,37 +27,54 @@ func NewJSONFormatter(config *FormatterConfig) *JSONFormatter {
 func (f *JSONFormatter) Format(entry LogEntry) ([]byte, error) {
 	data := make(map[string]interface{})
 
+	f.addBaseFields(entry, data)
+	f.addUserFields(entry, data)
+	f.addFileInfo(entry, data)
+	f.addContextFields(entry, data)
+
+	return json.Marshal(data)
+}
+
+func (f *JSONFormatter) addBaseFields(entry LogEntry, data map[string]interface{}) {
 	if f.config.IncludeTime {
 		data["timestamp"] = entry.Timestamp.UTC().Format(time.RFC3339)
 	}
-
 	data["level"] = entry.Level.String()
 	data["message"] = f.applyRedaction(entry.Message)
+}
 
-	// Add fields
+func (f *JSONFormatter) addUserFields(entry LogEntry, data map[string]interface{}) {
 	for k, v := range entry.Fields {
 		data[k] = v
 	}
+}
 
-	// Add file information if configured
-	if f.config.IncludeFile && (entry.File != "" || entry.Line != 0) {
-		if entry.File == "" && entry.Line == 0 {
-			// Try to get caller info
-			if _, file, line, ok := runtime.Caller(4); ok {
-				entry.File = file
-				entry.Line = line
-			}
-		}
-		if entry.File != "" {
-			data["file"] = f.formatFilename(entry.File, entry.Line)
-		}
+func (f *JSONFormatter) addFileInfo(entry LogEntry, data map[string]interface{}) {
+	if !f.config.IncludeFile {
+		return
 	}
 
-	// Add context information
+	file, line := f.getFileInfo(entry)
+	if file != "" {
+		data["file"] = f.formatFilename(file, line)
+	}
+}
+
+func (f *JSONFormatter) getFileInfo(entry LogEntry) (string, int) {
+	if entry.File != "" || entry.Line != 0 {
+		return entry.File, entry.Line
+	}
+
+	if _, file, line, ok := runtime.Caller(4); ok {
+		return file, line
+	}
+
+	return "", 0
+}
+
+func (f *JSONFormatter) addContextFields(entry LogEntry, data map[string]interface{}) {
 	contextFields := internal.ExtractContextFields(entry.Context)
 	contextFields.AddToMap(data)
-
-	return json.Marshal(data)
 }
 
 func (f *JSONFormatter) applyRedaction(message string) string {
@@ -85,49 +102,72 @@ func NewTextFormatter(config *FormatterConfig) *TextFormatter {
 func (f *TextFormatter) Format(entry LogEntry) ([]byte, error) {
 	var parts []string
 
-	// Add timestamp if configured
-	if f.config.IncludeTime {
-		parts = append(parts, entry.Timestamp.Format("2006/01/02 15:04:05"))
-	}
-
-	// Add level
-	parts = append(parts, fmt.Sprintf("[%s]", strings.ToUpper(entry.Level.String())))
-
-	// Add file information if configured
-	if f.config.IncludeFile {
-		if entry.File == "" && entry.Line == 0 {
-			// Try to get caller info
-			if _, file, line, ok := runtime.Caller(4); ok {
-				entry.File = file
-				entry.Line = line
-			}
-		}
-		if entry.File != "" {
-			parts = append(parts, f.formatFilename(entry.File, entry.Line))
-		}
-	}
-
-	// Add the main message
-	message := f.applyRedaction(entry.Message)
-	parts = append(parts, message)
-
-	// Add fields if present
-	if len(entry.Fields) > 0 {
-		var fieldParts []string
-		for k, v := range entry.Fields {
-			fieldParts = append(fieldParts, fmt.Sprintf("%s=%v", k, v))
-		}
-		parts = append(parts, fmt.Sprintf("{%s}", strings.Join(fieldParts, " ")))
-	}
-
-	// Add context information if present
-	contextFields := internal.ExtractContextFields(entry.Context)
-	if contextText := contextFields.FormatForText(); contextText != "" {
-		parts = append(parts, contextText)
-	}
+	f.addTimestamp(&parts, entry)
+	f.addLevel(&parts, entry)
+	f.addFileInfoText(&parts, entry)
+	f.addMessage(&parts, entry)
+	f.addFieldsText(&parts, entry)
+	f.addContextText(&parts, entry)
 
 	result := strings.Join(parts, " ") + "\n"
 	return []byte(result), nil
+}
+
+func (f *TextFormatter) addTimestamp(parts *[]string, entry LogEntry) {
+	if f.config.IncludeTime {
+		*parts = append(*parts, entry.Timestamp.Format("2006/01/02 15:04:05"))
+	}
+}
+
+func (f *TextFormatter) addLevel(parts *[]string, entry LogEntry) {
+	*parts = append(*parts, fmt.Sprintf("[%s]", strings.ToUpper(entry.Level.String())))
+}
+
+func (f *TextFormatter) addFileInfoText(parts *[]string, entry LogEntry) {
+	if !f.config.IncludeFile {
+		return
+	}
+
+	file, line := f.getFileInfoText(entry)
+	if file != "" {
+		*parts = append(*parts, f.formatFilename(file, line))
+	}
+}
+
+func (f *TextFormatter) getFileInfoText(entry LogEntry) (string, int) {
+	if entry.File != "" || entry.Line != 0 {
+		return entry.File, entry.Line
+	}
+
+	if _, file, line, ok := runtime.Caller(4); ok {
+		return file, line
+	}
+
+	return "", 0
+}
+
+func (f *TextFormatter) addMessage(parts *[]string, entry LogEntry) {
+	message := f.applyRedaction(entry.Message)
+	*parts = append(*parts, message)
+}
+
+func (f *TextFormatter) addFieldsText(parts *[]string, entry LogEntry) {
+	if len(entry.Fields) == 0 {
+		return
+	}
+
+	var fieldParts []string
+	for k, v := range entry.Fields {
+		fieldParts = append(fieldParts, fmt.Sprintf("%s=%v", k, v))
+	}
+	*parts = append(*parts, fmt.Sprintf("{%s}", strings.Join(fieldParts, " ")))
+}
+
+func (f *TextFormatter) addContextText(parts *[]string, entry LogEntry) {
+	contextFields := internal.ExtractContextFields(entry.Context)
+	if contextText := contextFields.FormatForText(); contextText != "" {
+		*parts = append(*parts, contextText)
+	}
 }
 
 func (f *TextFormatter) applyRedaction(message string) string {
@@ -169,43 +209,56 @@ func NewConsoleFormatter(config *FormatterConfig, useColors bool) *ConsoleFormat
 func (f *ConsoleFormatter) Format(entry LogEntry) ([]byte, error) {
 	var parts []string
 
-	// Add timestamp if configured
-	if f.config.IncludeTime {
-		timestamp := entry.Timestamp.Format("15:04:05")
-		if f.useColors {
-			timestamp = "\033[90m" + timestamp + "\033[0m" // Dark gray
-		}
-		parts = append(parts, timestamp)
+	f.addTimestampConsole(&parts, entry)
+	f.addLevelConsole(&parts, entry)
+	f.addMessageConsole(&parts, entry)
+	f.addFieldsConsole(&parts, entry)
+
+	result := strings.Join(parts, " ") + "\n"
+	return []byte(result), nil
+}
+
+func (f *ConsoleFormatter) addTimestampConsole(parts *[]string, entry LogEntry) {
+	if !f.config.IncludeTime {
+		return
 	}
 
-	// Add level with color
+	timestamp := entry.Timestamp.Format("15:04:05")
+	if f.useColors {
+		timestamp = "\033[90m" + timestamp + "\033[0m" // Dark gray
+	}
+	*parts = append(*parts, timestamp)
+}
+
+func (f *ConsoleFormatter) addLevelConsole(parts *[]string, entry LogEntry) {
 	levelStr := strings.ToUpper(entry.Level.String())
 	if f.useColors {
 		if color, exists := f.levelColors[entry.Level]; exists {
 			levelStr = color + levelStr + "\033[0m"
 		}
 	}
-	parts = append(parts, fmt.Sprintf("[%s]", levelStr))
+	*parts = append(*parts, fmt.Sprintf("[%s]", levelStr))
+}
 
-	// Add the main message
+func (f *ConsoleFormatter) addMessageConsole(parts *[]string, entry LogEntry) {
 	message := f.applyRedaction(entry.Message)
-	parts = append(parts, message)
+	*parts = append(*parts, message)
+}
 
-	// Add fields in a compact format
-	if len(entry.Fields) > 0 {
-		var fieldParts []string
-		for k, v := range entry.Fields {
-			fieldStr := fmt.Sprintf("%s=%v", k, v)
-			if f.useColors {
-				fieldStr = "\033[90m" + fieldStr + "\033[0m" // Dark gray
-			}
-			fieldParts = append(fieldParts, fieldStr)
-		}
-		parts = append(parts, strings.Join(fieldParts, " "))
+func (f *ConsoleFormatter) addFieldsConsole(parts *[]string, entry LogEntry) {
+	if len(entry.Fields) == 0 {
+		return
 	}
 
-	result := strings.Join(parts, " ") + "\n"
-	return []byte(result), nil
+	var fieldParts []string
+	for k, v := range entry.Fields {
+		fieldStr := fmt.Sprintf("%s=%v", k, v)
+		if f.useColors {
+			fieldStr = "\033[90m" + fieldStr + "\033[0m" // Dark gray
+		}
+		fieldParts = append(fieldParts, fieldStr)
+	}
+	*parts = append(*parts, strings.Join(fieldParts, " "))
 }
 
 func (f *ConsoleFormatter) applyRedaction(message string) string {
