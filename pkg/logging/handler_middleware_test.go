@@ -275,7 +275,6 @@ func TestMiddlewareHandler_WithAttrs(t *testing.T) {
 }
 
 func TestMiddlewareHandler_WithGroup(t *testing.T) {
-	t.Skip("WithGroup behavior needs investigation")
 	var buf bytes.Buffer
 	handler := slog.NewJSONHandler(&buf, nil)
 
@@ -283,6 +282,7 @@ func TestMiddlewareHandler_WithGroup(t *testing.T) {
 	mhWithGroup := mh.WithGroup("app")
 
 	record := slog.NewRecord(time.Now(), slog.LevelInfo, "test message", 0)
+	record.AddAttrs(slog.String("version", "1.0"))
 	err := mhWithGroup.Handle(context.Background(), record)
 
 	if err != nil {
@@ -290,8 +290,8 @@ func TestMiddlewareHandler_WithGroup(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, `"app"`) {
-		t.Error("Expected group in output")
+	if !strings.Contains(output, `"app":{"version":"1.0"}`) {
+		t.Errorf("Expected grouped attribute in output, got: %s", output)
 	}
 }
 
