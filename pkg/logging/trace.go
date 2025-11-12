@@ -3,8 +3,6 @@ package logging
 
 import (
 	"context"
-	"crypto/rand"
-	"fmt"
 )
 
 type contextKey string
@@ -18,7 +16,7 @@ const (
 	CorrelationKey contextKey = "correlation_id"
 )
 
-// NewTraceID generates a new unique trace identifier using UUID v4.
+// NewTraceID generates a new unique trace identifier using the configured UUID generator.
 // Use this to create trace IDs for tracking requests through your system.
 //
 // Example:
@@ -26,14 +24,7 @@ const (
 //	traceID := logging.NewTraceID()
 //	ctx := logging.WithTraceID(context.Background(), traceID)
 func NewTraceID() string {
-	var uuid [16]byte
-	_, err := rand.Read(uuid[:])
-	if err != nil {
-		panic(err)
-	}
-	uuid[6] = (uuid[6] & 0x0f) | 0x40
-	uuid[8] = (uuid[8] & 0x3f) | 0x80
-	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:])
+	return defaultGenerator.Generate()
 }
 
 // WithTraceID returns a new context with the trace ID attached.

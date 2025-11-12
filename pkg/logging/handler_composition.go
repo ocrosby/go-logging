@@ -200,38 +200,20 @@ func (h *BufferedHandler) WithGroup(name string) slog.Handler {
 
 type AsyncHandler struct {
 	handler slog.Handler
-	queue   chan slog.Record
-	done    chan struct{}
-	wg      sync.WaitGroup
+	worker  *AsyncWorker[slog.Record]
 }
 
 func NewAsyncHandler(handler slog.Handler, queueSize int) *AsyncHandler {
-	ah := &AsyncHandler{
-		handler: handler,
-		queue:   make(chan slog.Record, queueSize),
-		done:    make(chan struct{}),
-	}
+	ah := &AsyncHandler{handler: handler}
 
-	ah.wg.Add(1)
-	go ah.worker()
+	ah.worker = NewAsyncWorker(AsyncWorkerConfig[slog.Record]{
+		QueueSize: queueSize,
+		Processor: func(record slog.Record) error {
+			return ah.handler.Handle(context.Background(), record)
+		},
+	})
 
 	return ah
-}
-
-func (h *AsyncHandler) worker() {
-	defer h.wg.Done()
-
-	for {
-		select {
-		case record := <-h.queue:
-			_ = h.handler.Handle(context.Background(), record)
-		case <-h.done:
-			for record := range h.queue {
-				_ = h.handler.Handle(context.Background(), record)
-			}
-			return
-		}
-	}
 }
 
 func (h *AsyncHandler) Enabled(ctx context.Context, level slog.Level) bool {
@@ -239,26 +221,23 @@ func (h *AsyncHandler) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (h *AsyncHandler) Handle(ctx context.Context, record slog.Record) error {
-	select {
-	case h.queue <- record:
+	if h.worker.Submit(record) {
 		return nil
-	default:
-		return h.handler.Handle(ctx, record)
 	}
+	// Queue is full, handle synchronously as fallback
+	return h.handler.Handle(ctx, record)
 }
 
 func (h *AsyncHandler) Close() {
-	close(h.done)
-	h.wg.Wait()
-	close(h.queue)
+	_ = h.worker.Stop()
 }
 
 func (h *AsyncHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return NewAsyncHandler(h.handler.WithAttrs(attrs), cap(h.queue))
+	return NewAsyncHandler(h.handler.WithAttrs(attrs), h.worker.QueueCapacity())
 }
 
 func (h *AsyncHandler) WithGroup(name string) slog.Handler {
-	return NewAsyncHandler(h.handler.WithGroup(name), cap(h.queue))
+	return NewAsyncHandler(h.handler.WithGroup(name), h.worker.QueueCapacity())
 }
 
 type RotatingHandler struct {

@@ -2,6 +2,8 @@ package logging
 
 import (
 	"net/http"
+	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -111,5 +113,65 @@ func TestGetDefaultHeaders(t *testing.T) {
 
 	if got != expected {
 		t.Errorf("GetDefaultHeaders() = %v, want %v", got, expected)
+	}
+}
+
+func TestLogHTTPRequest(t *testing.T) {
+	// Create a test logger
+	logger := NewWithLevel(InfoLevel)
+
+	// Create a test request
+	req, err := http.NewRequest("POST", "https://api.example.com/users?id=123", nil)
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "test-client/1.0")
+
+	// This should not panic
+	LogHTTPRequest(logger, req, "Content-Type", "User-Agent")
+}
+
+func TestLogHTTPRequest_DefaultHeaders(t *testing.T) {
+	logger := NewWithLevel(InfoLevel)
+
+	req, err := http.NewRequest("GET", "https://example.com", nil)
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	// Should use default headers when none specified
+	LogHTTPRequest(logger, req)
+}
+
+func TestLogHTTPResponse(t *testing.T) {
+	logger := NewWithLevel(InfoLevel)
+
+	// This should not panic
+	LogHTTPResponse(logger, 200, "https://api.example.com/users")
+}
+
+func TestLogHTTPResponse_WithRedaction(t *testing.T) {
+	logger := NewWithLevel(InfoLevel)
+
+	// URL with API key should be redacted
+	LogHTTPResponse(logger, 404, "https://api.example.com/users?apiKey=secret123")
+}
+
+func TestRedactedURL_WithCustomRedactor(t *testing.T) {
+	// Create a custom redactor
+	re := regexp.MustCompile(`password=\w+`)
+	customRedactor := NewRegexRedactor(re, "[PASSWORD_REDACTED]")
+
+	url := "https://example.com/login?user=john&password=secret123"
+	result := RedactedURL(url, customRedactor)
+
+	if !strings.Contains(result, "[PASSWORD_REDACTED]") {
+		t.Errorf("expected custom redaction, got %s", result)
+	}
+
+	if strings.Contains(result, "secret123") {
+		t.Error("expected password to be redacted")
 	}
 }

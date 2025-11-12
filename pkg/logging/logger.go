@@ -1,10 +1,12 @@
 package logging
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
-// Logger defines the core logging interface with multiple log levels,
-// structured logging support, and context awareness. All implementations
-// must be thread-safe and support concurrent usage.
+// Logger defines the complete logging interface with structured logging support.
+// All implementations must be thread-safe and support concurrent usage.
 //
 // Example usage:
 //
@@ -12,90 +14,92 @@ import "context"
 //	logger.Info("Application started")
 //	logger.WithField("user_id", 123).Info("User logged in")
 type Logger interface {
-	// Trace logs a message at TRACE level with optional formatting arguments.
-	// This is the most verbose level and should be used for detailed debugging.
-	Trace(msg string, args ...interface{})
+	// Core logging methods
+	Log(level Level, msg string, args ...interface{})
+	LogContext(ctx context.Context, level Level, msg string, args ...interface{})
 
-	// Debug logs a message at DEBUG level with optional formatting arguments.
-	// Use this for diagnostic information useful during development.
-	Debug(msg string, args ...interface{})
-
-	// Info logs a message at INFO level with optional formatting arguments.
-	// This is the default level for general informational messages.
-	Info(msg string, args ...interface{})
-
-	// Warn logs a message at WARN level with optional formatting arguments.
-	// Use this for warning conditions that don't prevent operation.
-	Warn(msg string, args ...interface{})
-
-	// Error logs a message at ERROR level with optional formatting arguments.
-	// Use this for error conditions that may affect functionality.
-	Error(msg string, args ...interface{})
-
-	// Critical logs a message at CRITICAL level with optional formatting arguments.
-	// This is the least verbose level for critical conditions requiring immediate attention.
-	Critical(msg string, args ...interface{})
-
-	// TraceContext logs a message at TRACE level with context for trace/request ID propagation.
-	TraceContext(ctx context.Context, msg string, args ...interface{})
-
-	// DebugContext logs a message at DEBUG level with context for trace/request ID propagation.
-	DebugContext(ctx context.Context, msg string, args ...interface{})
-
-	// InfoContext logs a message at INFO level with context for trace/request ID propagation.
-	InfoContext(ctx context.Context, msg string, args ...interface{})
-
-	// WarnContext logs a message at WARN level with context for trace/request ID propagation.
-	WarnContext(ctx context.Context, msg string, args ...interface{})
-
-	// ErrorContext logs a message at ERROR level with context for trace/request ID propagation.
-	ErrorContext(ctx context.Context, msg string, args ...interface{})
-
-	// CriticalContext logs a message at CRITICAL level with context for trace/request ID propagation.
-	CriticalContext(ctx context.Context, msg string, args ...interface{})
-
-	// WithField returns a new Logger instance with an additional field attached.
-	// The original logger is not modified (immutable pattern).
-	//
-	// Example:
-	//	userLogger := logger.WithField("user_id", 123)
-	//	userLogger.Info("User action")
+	// Field attachment methods (immutable)
 	WithField(key string, value interface{}) Logger
-
-	// WithFields returns a new Logger instance with multiple fields attached.
-	// The original logger is not modified (immutable pattern).
-	//
-	// Example:
-	//	contextLogger := logger.WithFields(map[string]interface{}{
-	//		"service": "api",
-	//		"version": "1.0.0",
-	//	})
 	WithFields(fields map[string]interface{}) Logger
 
-	// IsLevelEnabled returns true if the given level will produce output.
-	// Use this to avoid expensive operations when the level is disabled.
-	//
-	// Example:
-	//	if logger.IsLevelEnabled(logging.DebugLevel) {
-	//		logger.Debug("Expensive debug info: %v", computeExpensiveData())
-	//	}
+	// Level checking
 	IsLevelEnabled(level Level) bool
 
+	// Level-specific logging methods
+	Trace(msg string, args ...interface{})
+	Debug(msg string, args ...interface{})
+	Info(msg string, args ...interface{})
+	Warn(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+	Critical(msg string, args ...interface{})
+
+	// Context-aware level-specific logging methods
+	TraceContext(ctx context.Context, msg string, args ...interface{})
+	DebugContext(ctx context.Context, msg string, args ...interface{})
+	InfoContext(ctx context.Context, msg string, args ...interface{})
+	WarnContext(ctx context.Context, msg string, args ...interface{})
+	ErrorContext(ctx context.Context, msg string, args ...interface{})
+	CriticalContext(ctx context.Context, msg string, args ...interface{})
+
+	// Fluent interface support
+	Fluent() FluentLogger
+
+	// Configuration methods
+	SetLevel(level Level)
+	GetLevel() Level
+}
+
+// ConfigurableLogger allows runtime configuration changes.
+type ConfigurableLogger interface {
+	Logger
+
 	// SetLevel dynamically changes the minimum log level.
-	// Only messages at or above this level will be output.
 	SetLevel(level Level)
 
 	// GetLevel returns the current minimum log level.
 	GetLevel() Level
+}
 
-	// Fluent returns a fluent interface for expressive chained logging.
-	//
-	// Example:
-	//	logger.Fluent().Info().
-	//		Str("service", "api").
-	//		Int("user_id", 123).
-	//		Msg("User logged in")
-	Fluent() FluentLogger
+// LogEntry represents a structured log entry with all its metadata.
+type LogEntry struct {
+	Timestamp time.Time
+	Level     Level
+	Message   string
+	Fields    map[string]interface{}
+	Context   context.Context
+	File      string
+	Line      int
+}
+
+// Formatter defines how log entries are converted to output format.
+type Formatter interface {
+	// Format converts a LogEntry to bytes for output.
+	Format(entry LogEntry) ([]byte, error)
+}
+
+// Output defines where formatted log entries are written.
+type Output interface {
+	// Write outputs the formatted log data.
+	Write(data []byte) error
+
+	// Close cleanly shuts down the output (optional).
+	Close() error
+}
+
+// BufferedOutputInterface extends Output with buffering capabilities.
+type BufferedOutputInterface interface {
+	Output
+
+	// Flush ensures all buffered data is written.
+	Flush() error
+}
+
+// AsyncOutputInterface extends Output with asynchronous writing capabilities.
+type AsyncOutputInterface interface {
+	Output
+
+	// Stop gracefully shuts down async processing.
+	Stop() error
 }
 
 // FluentLogger provides a fluent interface for building log entries

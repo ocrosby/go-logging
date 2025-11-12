@@ -159,21 +159,45 @@ type levelMethod func(string, ...interface{})
 type contextLevelMethod func(context.Context, string, ...interface{})
 
 var levelMethodMap = map[Level]func(Logger) levelMethod{
-	TraceLevel:    func(l Logger) levelMethod { return l.Trace },
-	DebugLevel:    func(l Logger) levelMethod { return l.Debug },
-	InfoLevel:     func(l Logger) levelMethod { return l.Info },
-	WarnLevel:     func(l Logger) levelMethod { return l.Warn },
-	ErrorLevel:    func(l Logger) levelMethod { return l.Error },
-	CriticalLevel: func(l Logger) levelMethod { return l.Critical },
+	TraceLevel: func(l Logger) levelMethod {
+		return l.Trace
+	},
+	DebugLevel: func(l Logger) levelMethod {
+		return l.Debug
+	},
+	InfoLevel: func(l Logger) levelMethod {
+		return l.Info
+	},
+	WarnLevel: func(l Logger) levelMethod {
+		return l.Warn
+	},
+	ErrorLevel: func(l Logger) levelMethod {
+		return l.Error
+	},
+	CriticalLevel: func(l Logger) levelMethod {
+		return l.Critical
+	},
 }
 
 var contextLevelMethodMap = map[Level]func(Logger) contextLevelMethod{
-	TraceLevel:    func(l Logger) contextLevelMethod { return l.TraceContext },
-	DebugLevel:    func(l Logger) contextLevelMethod { return l.DebugContext },
-	InfoLevel:     func(l Logger) contextLevelMethod { return l.InfoContext },
-	WarnLevel:     func(l Logger) contextLevelMethod { return l.WarnContext },
-	ErrorLevel:    func(l Logger) contextLevelMethod { return l.ErrorContext },
-	CriticalLevel: func(l Logger) contextLevelMethod { return l.CriticalContext },
+	TraceLevel: func(l Logger) contextLevelMethod {
+		return l.TraceContext
+	},
+	DebugLevel: func(l Logger) contextLevelMethod {
+		return l.DebugContext
+	},
+	InfoLevel: func(l Logger) contextLevelMethod {
+		return l.InfoContext
+	},
+	WarnLevel: func(l Logger) contextLevelMethod {
+		return l.WarnContext
+	},
+	ErrorLevel: func(l Logger) contextLevelMethod {
+		return l.ErrorContext
+	},
+	CriticalLevel: func(l Logger) contextLevelMethod {
+		return l.CriticalContext
+	},
 }
 
 func (e *FluentEntry) dispatch(logger Logger, format string, args []interface{}) {

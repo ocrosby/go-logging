@@ -27,8 +27,7 @@ func BenchmarkSlogLogger_Info(b *testing.B) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(InfoLevel)
+	logger := NewWithHandler(handler)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -58,10 +57,9 @@ func BenchmarkSlogLogger_InfoWithFields(b *testing.B) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain()).
+	logger := NewWithHandler(handler).
 		WithField("service", "test").
 		WithField("version", "1.0.0")
-	logger.SetLevel(InfoLevel)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -90,8 +88,7 @@ func BenchmarkSlogLogger_InfoContext(b *testing.B) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(InfoLevel)
+	logger := NewWithHandler(handler)
 	ctx := WithTraceID(context.Background(), "trace-123")
 
 	b.ResetTimer()
@@ -120,8 +117,7 @@ func BenchmarkSlogLogger_JSON(b *testing.B) {
 	handler := slog.NewJSONHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(InfoLevel)
+	logger := NewWithHandler(handler)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -152,8 +148,7 @@ func BenchmarkSlogLogger_Fluent(b *testing.B) {
 	handler := slog.NewJSONHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(InfoLevel)
+	logger := NewWithHandler(handler)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -184,8 +179,7 @@ func BenchmarkSlogLogger_Formatting(b *testing.B) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(InfoLevel)
+	logger := NewWithHandler(handler)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -215,8 +209,7 @@ func BenchmarkSlogLogger_LevelCheck(b *testing.B) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelWarn,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(WarnLevel)
+	logger := NewWithHandler(handler)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -247,8 +240,7 @@ func BenchmarkSlogLogger_WithFieldAllocation(b *testing.B) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	baseLogger := NewSlogLogger(handler, NewRedactorChain())
-	baseLogger.SetLevel(InfoLevel)
+	baseLogger := NewWithHandler(handler)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -307,12 +299,7 @@ func BenchmarkRedaction_SlogLogger(b *testing.B) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	config := NewConfig().
-		AddRedactPattern(`password=\w+`).
-		Build()
-	redactorChain := ProvideRedactorChain(config)
-	logger := NewSlogLogger(handler, redactorChain)
-	logger.SetLevel(InfoLevel)
+	logger := NewWithHandler(handler)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -342,8 +329,7 @@ func BenchmarkParallelLogging_SlogLogger(b *testing.B) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(InfoLevel)
+	logger := NewWithHandler(handler)
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {

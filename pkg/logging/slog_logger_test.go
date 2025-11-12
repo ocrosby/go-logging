@@ -13,8 +13,7 @@ func TestSlogLogger_Levels(t *testing.T) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(DebugLevel)
+	logger := NewWithHandler(handler)
 
 	logger.Debug("debug message")
 	logger.Info("info message")
@@ -41,7 +40,7 @@ func TestSlogLogger_WithFields(t *testing.T) {
 	handler := slog.NewJSONHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
+	logger := NewWithHandler(handler)
 
 	logger = logger.WithField("service", "test")
 	logger.Info("message with field")
@@ -60,7 +59,7 @@ func TestSlogLogger_WithMultipleFields(t *testing.T) {
 	handler := slog.NewJSONHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
+	logger := NewWithHandler(handler)
 
 	fields := map[string]interface{}{
 		"service": "test",
@@ -87,7 +86,7 @@ func TestSlogLogger_Context(t *testing.T) {
 	handler := slog.NewJSONHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
+	logger := NewWithHandler(handler)
 
 	ctx := WithRequestID(context.Background(), "req-123")
 	logger.InfoContext(ctx, "message with context")
@@ -103,8 +102,7 @@ func TestSlogLogger_LevelFiltering(t *testing.T) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelWarn,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(WarnLevel)
+	logger := NewWithHandler(handler)
 
 	logger.Debug("debug message")
 	logger.Info("info message")
@@ -131,7 +129,7 @@ func TestSlogLogger_Formatting(t *testing.T) {
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
+	logger := NewWithHandler(handler)
 
 	logger.Info("user %s logged in", "john")
 	logger.Error("failed with error: %v", "connection timeout")
@@ -150,7 +148,7 @@ func TestSlogLogger_Fluent(t *testing.T) {
 	handler := slog.NewJSONHandler(&buf, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
+	logger := NewWithHandler(handler)
 
 	logger.Fluent().Info().
 		Str("user", "john").
@@ -172,10 +170,9 @@ func TestSlogLogger_Fluent(t *testing.T) {
 func TestSlogLogger_CustomLevels(t *testing.T) {
 	var buf bytes.Buffer
 	handler := slog.NewTextHandler(&buf, &slog.HandlerOptions{
-		Level: LevelTrace,
+		Level: slog.Level(-8), // Allow trace level (our custom level)
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(TraceLevel)
+	logger := NewWithHandler(handler)
 
 	logger.Trace("trace message")
 	logger.Critical("critical message")
@@ -193,8 +190,7 @@ func TestSlogLogger_IsLevelEnabled(t *testing.T) {
 	handler := slog.NewTextHandler(&bytes.Buffer{}, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
-	logger.SetLevel(InfoLevel)
+	logger := NewWithHandler(handler)
 
 	if logger.IsLevelEnabled(TraceLevel) {
 		t.Error("TraceLevel should not be enabled")
@@ -220,15 +216,17 @@ func TestSlogLogger_GetSetLevel(t *testing.T) {
 	handler := slog.NewTextHandler(&bytes.Buffer{}, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
-	logger := NewSlogLogger(handler, NewRedactorChain())
+	logger := NewWithHandler(handler)
 
+	// Test setting to DebugLevel
 	logger.SetLevel(DebugLevel)
 	if logger.GetLevel() != DebugLevel {
-		t.Errorf("Expected level to be DebugLevel, got %v", logger.GetLevel())
+		t.Errorf("Expected level to be DebugLevel after SetLevel, got %v", logger.GetLevel())
 	}
 
+	// Test setting to ErrorLevel
 	logger.SetLevel(ErrorLevel)
 	if logger.GetLevel() != ErrorLevel {
-		t.Errorf("Expected level to be ErrorLevel, got %v", logger.GetLevel())
+		t.Errorf("Expected level to be ErrorLevel after SetLevel, got %v", logger.GetLevel())
 	}
 }

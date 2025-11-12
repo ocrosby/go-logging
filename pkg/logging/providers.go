@@ -7,14 +7,50 @@ import (
 	"regexp"
 )
 
+// Legacy providers for backward compatibility with old Config type
 func ProvideConfig() *Config {
-	return NewConfig().
+	// Convert new LoggerConfig to old Config format for backward compatibility
+	newConfig := NewLoggerConfig().FromEnvironment().Build()
+	return &Config{
+		Level:          newConfig.Core.Level,
+		Output:         newConfig.Output.Writer,
+		Format:         newConfig.Formatter.Format,
+		IncludeFile:    newConfig.Formatter.IncludeFile,
+		IncludeTime:    newConfig.Formatter.IncludeTime,
+		UseShortFile:   newConfig.Formatter.UseShortFile,
+		RedactPatterns: newConfig.Formatter.RedactPatterns,
+		StaticFields:   newConfig.Core.StaticFields,
+		Handler:        newConfig.Handler,
+		UseSlog:        newConfig.UseSlog,
+	}
+}
+
+func ProvideConfigWithLevel(level Level) *Config {
+	// Convert new LoggerConfig to old Config format for backward compatibility
+	newConfig := NewLoggerConfig().WithLevel(level).FromEnvironment().Build()
+	return &Config{
+		Level:          newConfig.Core.Level,
+		Output:         newConfig.Output.Writer,
+		Format:         newConfig.Formatter.Format,
+		IncludeFile:    newConfig.Formatter.IncludeFile,
+		IncludeTime:    newConfig.Formatter.IncludeTime,
+		UseShortFile:   newConfig.Formatter.UseShortFile,
+		RedactPatterns: newConfig.Formatter.RedactPatterns,
+		StaticFields:   newConfig.Core.StaticFields,
+		Handler:        newConfig.Handler,
+		UseSlog:        newConfig.UseSlog,
+	}
+}
+
+// New providers using new config structure
+func ProvideLoggerConfig() *LoggerConfig {
+	return NewLoggerConfig().
 		FromEnvironment().
 		Build()
 }
 
-func ProvideConfigWithLevel(level Level) *Config {
-	return NewConfig().
+func ProvideLoggerConfigWithLevel(level Level) *LoggerConfig {
+	return NewLoggerConfig().
 		WithLevel(level).
 		FromEnvironment().
 		Build()
@@ -32,52 +68,48 @@ func ProvideRedactorChainWithPatterns(patterns ...*regexp.Regexp) RedactorChainI
 	return NewRedactorChain(patterns...)
 }
 
-func ProvideLogger(config *Config, redactorChain RedactorChainInterface) Logger {
-	if config.UseSlog {
-		return NewSlogLoggerFromConfig(config, redactorChain)
-	}
-	return NewStandardLogger(config, redactorChain)
+func ProvideRedactorChainFromLoggerConfig(config *LoggerConfig) RedactorChainInterface {
+	return NewRedactorChain(config.Formatter.RedactPatterns...)
 }
 
-func NewSlogLoggerFromConfig(config *Config, redactorChain RedactorChainInterface) Logger {
-	var handler slog.Handler
-
-	if config.Handler != nil {
-		handler = config.Handler
-	} else {
-		opts := &slog.HandlerOptions{
-			Level:     levelToSlogLevel(config.Level),
-			AddSource: config.IncludeFile,
-		}
-
-		if config.Format == JSONFormat {
-			handler = slog.NewJSONHandler(config.Output, opts)
-		} else {
-			handler = slog.NewTextHandler(config.Output, opts)
-		}
-
-		if len(config.StaticFields) > 0 {
-			attrs := make([]slog.Attr, 0, len(config.StaticFields))
-			for k, v := range config.StaticFields {
-				attrs = append(attrs, slog.Any(k, v))
-			}
-			handler = handler.WithAttrs(attrs)
-		}
+// Updated provider using unified logger
+func ProvideLogger(config *Config, redactorChain RedactorChainInterface) Logger {
+	// Convert old config to new config format
+	loggerConfig := &LoggerConfig{
+		Core: &CoreConfig{
+			Level:        config.Level,
+			StaticFields: config.StaticFields,
+		},
+		Formatter: &FormatterConfig{
+			Format:         config.Format,
+			IncludeFile:    config.IncludeFile,
+			IncludeTime:    config.IncludeTime,
+			UseShortFile:   config.UseShortFile,
+			RedactPatterns: config.RedactPatterns,
+		},
+		Output: &OutputConfig{
+			Writer: config.Output,
+		},
+		Handler: config.Handler,
+		UseSlog: config.UseSlog,
 	}
 
-	logger := NewSlogLogger(handler, redactorChain).(*slogLogger)
-	logger.level = config.Level
-	return logger
+	return NewUnifiedLogger(loggerConfig, redactorChain)
+}
+
+// New provider using new config structure
+func ProvideLoggerFromConfig(config *LoggerConfig, redactorChain RedactorChainInterface) Logger {
+	return NewUnifiedLogger(config, redactorChain)
 }
 
 func levelToSlogLevel(level Level) slog.Level {
 	levelMap := map[Level]slog.Level{
-		TraceLevel:    LevelTrace,
+		TraceLevel:    slog.Level(-8), // LevelTrace
 		DebugLevel:    slog.LevelDebug,
 		InfoLevel:     slog.LevelInfo,
 		WarnLevel:     slog.LevelWarn,
 		ErrorLevel:    slog.LevelError,
-		CriticalLevel: LevelCritical,
+		CriticalLevel: slog.Level(12), // LevelCritical
 	}
 
 	if slogLevel, ok := levelMap[level]; ok {

@@ -219,6 +219,40 @@ func (mr *MockLoggerMockRecorder) IsLevelEnabled(level any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsLevelEnabled", reflect.TypeOf((*MockLogger)(nil).IsLevelEnabled), level)
 }
 
+// Log mocks base method.
+func (m *MockLogger) Log(level logging.Level, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{level, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Log", varargs...)
+}
+
+// Log indicates an expected call of Log.
+func (mr *MockLoggerMockRecorder) Log(level, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{level, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Log", reflect.TypeOf((*MockLogger)(nil).Log), varargs...)
+}
+
+// LogContext mocks base method.
+func (m *MockLogger) LogContext(ctx context.Context, level logging.Level, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, level, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "LogContext", varargs...)
+}
+
+// LogContext indicates an expected call of LogContext.
+func (mr *MockLoggerMockRecorder) LogContext(ctx, level, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, level, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogContext", reflect.TypeOf((*MockLogger)(nil).LogContext), varargs...)
+}
+
 // SetLevel mocks base method.
 func (m *MockLogger) SetLevel(level logging.Level) {
 	m.ctrl.T.Helper()
@@ -325,6 +359,573 @@ func (m *MockLogger) WithFields(fields map[string]any) logging.Logger {
 func (mr *MockLoggerMockRecorder) WithFields(fields any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithFields", reflect.TypeOf((*MockLogger)(nil).WithFields), fields)
+}
+
+// MockConfigurableLogger is a mock of ConfigurableLogger interface.
+type MockConfigurableLogger struct {
+	ctrl     *gomock.Controller
+	recorder *MockConfigurableLoggerMockRecorder
+	isgomock struct{}
+}
+
+// MockConfigurableLoggerMockRecorder is the mock recorder for MockConfigurableLogger.
+type MockConfigurableLoggerMockRecorder struct {
+	mock *MockConfigurableLogger
+}
+
+// NewMockConfigurableLogger creates a new mock instance.
+func NewMockConfigurableLogger(ctrl *gomock.Controller) *MockConfigurableLogger {
+	mock := &MockConfigurableLogger{ctrl: ctrl}
+	mock.recorder = &MockConfigurableLoggerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockConfigurableLogger) EXPECT() *MockConfigurableLoggerMockRecorder {
+	return m.recorder
+}
+
+// Critical mocks base method.
+func (m *MockConfigurableLogger) Critical(msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Critical", varargs...)
+}
+
+// Critical indicates an expected call of Critical.
+func (mr *MockConfigurableLoggerMockRecorder) Critical(msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Critical", reflect.TypeOf((*MockConfigurableLogger)(nil).Critical), varargs...)
+}
+
+// CriticalContext mocks base method.
+func (m *MockConfigurableLogger) CriticalContext(ctx context.Context, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "CriticalContext", varargs...)
+}
+
+// CriticalContext indicates an expected call of CriticalContext.
+func (mr *MockConfigurableLoggerMockRecorder) CriticalContext(ctx, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CriticalContext", reflect.TypeOf((*MockConfigurableLogger)(nil).CriticalContext), varargs...)
+}
+
+// Debug mocks base method.
+func (m *MockConfigurableLogger) Debug(msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Debug", varargs...)
+}
+
+// Debug indicates an expected call of Debug.
+func (mr *MockConfigurableLoggerMockRecorder) Debug(msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockConfigurableLogger)(nil).Debug), varargs...)
+}
+
+// DebugContext mocks base method.
+func (m *MockConfigurableLogger) DebugContext(ctx context.Context, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "DebugContext", varargs...)
+}
+
+// DebugContext indicates an expected call of DebugContext.
+func (mr *MockConfigurableLoggerMockRecorder) DebugContext(ctx, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DebugContext", reflect.TypeOf((*MockConfigurableLogger)(nil).DebugContext), varargs...)
+}
+
+// Error mocks base method.
+func (m *MockConfigurableLogger) Error(msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Error", varargs...)
+}
+
+// Error indicates an expected call of Error.
+func (mr *MockConfigurableLoggerMockRecorder) Error(msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockConfigurableLogger)(nil).Error), varargs...)
+}
+
+// ErrorContext mocks base method.
+func (m *MockConfigurableLogger) ErrorContext(ctx context.Context, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "ErrorContext", varargs...)
+}
+
+// ErrorContext indicates an expected call of ErrorContext.
+func (mr *MockConfigurableLoggerMockRecorder) ErrorContext(ctx, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ErrorContext", reflect.TypeOf((*MockConfigurableLogger)(nil).ErrorContext), varargs...)
+}
+
+// Fluent mocks base method.
+func (m *MockConfigurableLogger) Fluent() logging.FluentLogger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Fluent")
+	ret0, _ := ret[0].(logging.FluentLogger)
+	return ret0
+}
+
+// Fluent indicates an expected call of Fluent.
+func (mr *MockConfigurableLoggerMockRecorder) Fluent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fluent", reflect.TypeOf((*MockConfigurableLogger)(nil).Fluent))
+}
+
+// GetLevel mocks base method.
+func (m *MockConfigurableLogger) GetLevel() logging.Level {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLevel")
+	ret0, _ := ret[0].(logging.Level)
+	return ret0
+}
+
+// GetLevel indicates an expected call of GetLevel.
+func (mr *MockConfigurableLoggerMockRecorder) GetLevel() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLevel", reflect.TypeOf((*MockConfigurableLogger)(nil).GetLevel))
+}
+
+// Info mocks base method.
+func (m *MockConfigurableLogger) Info(msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Info", varargs...)
+}
+
+// Info indicates an expected call of Info.
+func (mr *MockConfigurableLoggerMockRecorder) Info(msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockConfigurableLogger)(nil).Info), varargs...)
+}
+
+// InfoContext mocks base method.
+func (m *MockConfigurableLogger) InfoContext(ctx context.Context, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "InfoContext", varargs...)
+}
+
+// InfoContext indicates an expected call of InfoContext.
+func (mr *MockConfigurableLoggerMockRecorder) InfoContext(ctx, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InfoContext", reflect.TypeOf((*MockConfigurableLogger)(nil).InfoContext), varargs...)
+}
+
+// IsLevelEnabled mocks base method.
+func (m *MockConfigurableLogger) IsLevelEnabled(level logging.Level) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsLevelEnabled", level)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsLevelEnabled indicates an expected call of IsLevelEnabled.
+func (mr *MockConfigurableLoggerMockRecorder) IsLevelEnabled(level any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsLevelEnabled", reflect.TypeOf((*MockConfigurableLogger)(nil).IsLevelEnabled), level)
+}
+
+// Log mocks base method.
+func (m *MockConfigurableLogger) Log(level logging.Level, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{level, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Log", varargs...)
+}
+
+// Log indicates an expected call of Log.
+func (mr *MockConfigurableLoggerMockRecorder) Log(level, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{level, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Log", reflect.TypeOf((*MockConfigurableLogger)(nil).Log), varargs...)
+}
+
+// LogContext mocks base method.
+func (m *MockConfigurableLogger) LogContext(ctx context.Context, level logging.Level, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, level, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "LogContext", varargs...)
+}
+
+// LogContext indicates an expected call of LogContext.
+func (mr *MockConfigurableLoggerMockRecorder) LogContext(ctx, level, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, level, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogContext", reflect.TypeOf((*MockConfigurableLogger)(nil).LogContext), varargs...)
+}
+
+// SetLevel mocks base method.
+func (m *MockConfigurableLogger) SetLevel(level logging.Level) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLevel", level)
+}
+
+// SetLevel indicates an expected call of SetLevel.
+func (mr *MockConfigurableLoggerMockRecorder) SetLevel(level any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLevel", reflect.TypeOf((*MockConfigurableLogger)(nil).SetLevel), level)
+}
+
+// Trace mocks base method.
+func (m *MockConfigurableLogger) Trace(msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Trace", varargs...)
+}
+
+// Trace indicates an expected call of Trace.
+func (mr *MockConfigurableLoggerMockRecorder) Trace(msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Trace", reflect.TypeOf((*MockConfigurableLogger)(nil).Trace), varargs...)
+}
+
+// TraceContext mocks base method.
+func (m *MockConfigurableLogger) TraceContext(ctx context.Context, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "TraceContext", varargs...)
+}
+
+// TraceContext indicates an expected call of TraceContext.
+func (mr *MockConfigurableLoggerMockRecorder) TraceContext(ctx, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TraceContext", reflect.TypeOf((*MockConfigurableLogger)(nil).TraceContext), varargs...)
+}
+
+// Warn mocks base method.
+func (m *MockConfigurableLogger) Warn(msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "Warn", varargs...)
+}
+
+// Warn indicates an expected call of Warn.
+func (mr *MockConfigurableLoggerMockRecorder) Warn(msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warn", reflect.TypeOf((*MockConfigurableLogger)(nil).Warn), varargs...)
+}
+
+// WarnContext mocks base method.
+func (m *MockConfigurableLogger) WarnContext(ctx context.Context, msg string, args ...any) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, msg}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	m.ctrl.Call(m, "WarnContext", varargs...)
+}
+
+// WarnContext indicates an expected call of WarnContext.
+func (mr *MockConfigurableLoggerMockRecorder) WarnContext(ctx, msg any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, msg}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WarnContext", reflect.TypeOf((*MockConfigurableLogger)(nil).WarnContext), varargs...)
+}
+
+// WithField mocks base method.
+func (m *MockConfigurableLogger) WithField(key string, value any) logging.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithField", key, value)
+	ret0, _ := ret[0].(logging.Logger)
+	return ret0
+}
+
+// WithField indicates an expected call of WithField.
+func (mr *MockConfigurableLoggerMockRecorder) WithField(key, value any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithField", reflect.TypeOf((*MockConfigurableLogger)(nil).WithField), key, value)
+}
+
+// WithFields mocks base method.
+func (m *MockConfigurableLogger) WithFields(fields map[string]any) logging.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithFields", fields)
+	ret0, _ := ret[0].(logging.Logger)
+	return ret0
+}
+
+// WithFields indicates an expected call of WithFields.
+func (mr *MockConfigurableLoggerMockRecorder) WithFields(fields any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithFields", reflect.TypeOf((*MockConfigurableLogger)(nil).WithFields), fields)
+}
+
+// MockFormatter is a mock of Formatter interface.
+type MockFormatter struct {
+	ctrl     *gomock.Controller
+	recorder *MockFormatterMockRecorder
+	isgomock struct{}
+}
+
+// MockFormatterMockRecorder is the mock recorder for MockFormatter.
+type MockFormatterMockRecorder struct {
+	mock *MockFormatter
+}
+
+// NewMockFormatter creates a new mock instance.
+func NewMockFormatter(ctrl *gomock.Controller) *MockFormatter {
+	mock := &MockFormatter{ctrl: ctrl}
+	mock.recorder = &MockFormatterMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockFormatter) EXPECT() *MockFormatterMockRecorder {
+	return m.recorder
+}
+
+// Format mocks base method.
+func (m *MockFormatter) Format(entry logging.LogEntry) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Format", entry)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Format indicates an expected call of Format.
+func (mr *MockFormatterMockRecorder) Format(entry any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Format", reflect.TypeOf((*MockFormatter)(nil).Format), entry)
+}
+
+// MockOutput is a mock of Output interface.
+type MockOutput struct {
+	ctrl     *gomock.Controller
+	recorder *MockOutputMockRecorder
+	isgomock struct{}
+}
+
+// MockOutputMockRecorder is the mock recorder for MockOutput.
+type MockOutputMockRecorder struct {
+	mock *MockOutput
+}
+
+// NewMockOutput creates a new mock instance.
+func NewMockOutput(ctrl *gomock.Controller) *MockOutput {
+	mock := &MockOutput{ctrl: ctrl}
+	mock.recorder = &MockOutputMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockOutput) EXPECT() *MockOutputMockRecorder {
+	return m.recorder
+}
+
+// Close mocks base method.
+func (m *MockOutput) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockOutputMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockOutput)(nil).Close))
+}
+
+// Write mocks base method.
+func (m *MockOutput) Write(data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Write", data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Write indicates an expected call of Write.
+func (mr *MockOutputMockRecorder) Write(data any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockOutput)(nil).Write), data)
+}
+
+// MockBufferedOutputInterface is a mock of BufferedOutputInterface interface.
+type MockBufferedOutputInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockBufferedOutputInterfaceMockRecorder
+	isgomock struct{}
+}
+
+// MockBufferedOutputInterfaceMockRecorder is the mock recorder for MockBufferedOutputInterface.
+type MockBufferedOutputInterfaceMockRecorder struct {
+	mock *MockBufferedOutputInterface
+}
+
+// NewMockBufferedOutputInterface creates a new mock instance.
+func NewMockBufferedOutputInterface(ctrl *gomock.Controller) *MockBufferedOutputInterface {
+	mock := &MockBufferedOutputInterface{ctrl: ctrl}
+	mock.recorder = &MockBufferedOutputInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockBufferedOutputInterface) EXPECT() *MockBufferedOutputInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Close mocks base method.
+func (m *MockBufferedOutputInterface) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockBufferedOutputInterfaceMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockBufferedOutputInterface)(nil).Close))
+}
+
+// Flush mocks base method.
+func (m *MockBufferedOutputInterface) Flush() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Flush")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Flush indicates an expected call of Flush.
+func (mr *MockBufferedOutputInterfaceMockRecorder) Flush() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flush", reflect.TypeOf((*MockBufferedOutputInterface)(nil).Flush))
+}
+
+// Write mocks base method.
+func (m *MockBufferedOutputInterface) Write(data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Write", data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Write indicates an expected call of Write.
+func (mr *MockBufferedOutputInterfaceMockRecorder) Write(data any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockBufferedOutputInterface)(nil).Write), data)
+}
+
+// MockAsyncOutputInterface is a mock of AsyncOutputInterface interface.
+type MockAsyncOutputInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockAsyncOutputInterfaceMockRecorder
+	isgomock struct{}
+}
+
+// MockAsyncOutputInterfaceMockRecorder is the mock recorder for MockAsyncOutputInterface.
+type MockAsyncOutputInterfaceMockRecorder struct {
+	mock *MockAsyncOutputInterface
+}
+
+// NewMockAsyncOutputInterface creates a new mock instance.
+func NewMockAsyncOutputInterface(ctrl *gomock.Controller) *MockAsyncOutputInterface {
+	mock := &MockAsyncOutputInterface{ctrl: ctrl}
+	mock.recorder = &MockAsyncOutputInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAsyncOutputInterface) EXPECT() *MockAsyncOutputInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Close mocks base method.
+func (m *MockAsyncOutputInterface) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockAsyncOutputInterfaceMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockAsyncOutputInterface)(nil).Close))
+}
+
+// Stop mocks base method.
+func (m *MockAsyncOutputInterface) Stop() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Stop")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Stop indicates an expected call of Stop.
+func (mr *MockAsyncOutputInterfaceMockRecorder) Stop() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockAsyncOutputInterface)(nil).Stop))
+}
+
+// Write mocks base method.
+func (m *MockAsyncOutputInterface) Write(data []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Write", data)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Write indicates an expected call of Write.
+func (mr *MockAsyncOutputInterfaceMockRecorder) Write(data any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockAsyncOutputInterface)(nil).Write), data)
 }
 
 // MockFluentLogger is a mock of FluentLogger interface.

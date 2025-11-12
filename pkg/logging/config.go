@@ -3,7 +3,6 @@ package logging
 import (
 	"io"
 	"log/slog"
-	"os"
 	"regexp"
 )
 
@@ -14,6 +13,8 @@ const (
 	JSONFormat
 )
 
+// Config provides backward compatibility with the old configuration system.
+// Deprecated: Use LoggerConfig for new code.
 type Config struct {
 	Level          Level
 	Output         io.Writer
@@ -27,117 +28,134 @@ type Config struct {
 	UseSlog        bool
 }
 
+// ToLoggerConfig converts old Config to new LoggerConfig structure.
+func (c *Config) ToLoggerConfig() *LoggerConfig {
+	return &LoggerConfig{
+		Core: &CoreConfig{
+			Level:        c.Level,
+			StaticFields: c.StaticFields,
+		},
+		Formatter: &FormatterConfig{
+			Format:         c.Format,
+			IncludeFile:    c.IncludeFile,
+			IncludeTime:    c.IncludeTime,
+			UseShortFile:   c.UseShortFile,
+			RedactPatterns: c.RedactPatterns,
+		},
+		Output: &OutputConfig{
+			Writer: c.Output,
+		},
+		Handler: c.Handler,
+		UseSlog: c.UseSlog,
+	}
+}
+
 type ConfigBuilder struct {
-	config *Config
+	builder *LoggerConfigBuilder
 }
 
 func NewConfig() *ConfigBuilder {
 	return &ConfigBuilder{
-		config: &Config{
-			Level:          InfoLevel,
-			Output:         os.Stdout,
-			Format:         TextFormat,
-			IncludeFile:    true,
-			IncludeTime:    true,
-			UseShortFile:   true,
-			RedactPatterns: make([]*regexp.Regexp, 0),
-			StaticFields:   make(map[string]interface{}),
-		},
+		builder: NewLoggerConfig(),
 	}
 }
 
 func (b *ConfigBuilder) WithLevel(level Level) *ConfigBuilder {
-	b.config.Level = level
+	b.builder.WithLevel(level)
 	return b
 }
 
 func (b *ConfigBuilder) WithLevelString(level string) *ConfigBuilder {
-	if l, ok := ParseLevel(level); ok {
-		b.config.Level = l
-	}
+	b.builder.WithLevelString(level)
 	return b
 }
 
 func (b *ConfigBuilder) WithOutput(w io.Writer) *ConfigBuilder {
-	b.config.Output = w
+	b.builder.WithWriter(w)
 	return b
 }
 
 func (b *ConfigBuilder) WithFormat(format OutputFormat) *ConfigBuilder {
-	b.config.Format = format
+	b.builder.WithFormat(format)
 	return b
 }
 
 func (b *ConfigBuilder) WithJSONFormat() *ConfigBuilder {
-	b.config.Format = JSONFormat
+	b.builder.WithJSONFormat()
 	return b
 }
 
 func (b *ConfigBuilder) WithTextFormat() *ConfigBuilder {
-	b.config.Format = TextFormat
+	b.builder.WithTextFormat()
 	return b
 }
 
 func (b *ConfigBuilder) IncludeFile(include bool) *ConfigBuilder {
-	b.config.IncludeFile = include
+	b.builder.config.Formatter.IncludeFile = include
 	return b
 }
 
 func (b *ConfigBuilder) IncludeTime(include bool) *ConfigBuilder {
-	b.config.IncludeTime = include
+	b.builder.config.Formatter.IncludeTime = include
 	return b
 }
 
 func (b *ConfigBuilder) UseShortFile(useShort bool) *ConfigBuilder {
-	b.config.UseShortFile = useShort
+	b.builder.config.Formatter.UseShortFile = useShort
 	return b
 }
 
 func (b *ConfigBuilder) AddRedactPattern(pattern string) *ConfigBuilder {
 	if re, err := regexp.Compile(pattern); err == nil {
-		b.config.RedactPatterns = append(b.config.RedactPatterns, re)
+		b.builder.config.Formatter.RedactPatterns = append(b.builder.config.Formatter.RedactPatterns, re)
 	}
 	return b
 }
 
 func (b *ConfigBuilder) AddRedactRegex(re *regexp.Regexp) *ConfigBuilder {
-	b.config.RedactPatterns = append(b.config.RedactPatterns, re)
+	b.builder.config.Formatter.RedactPatterns = append(b.builder.config.Formatter.RedactPatterns, re)
 	return b
 }
 
 func (b *ConfigBuilder) WithStaticField(key string, value interface{}) *ConfigBuilder {
-	b.config.StaticFields[key] = value
+	b.builder.config.Core.StaticFields[key] = value
 	return b
 }
 
 func (b *ConfigBuilder) WithStaticFields(fields map[string]interface{}) *ConfigBuilder {
 	for k, v := range fields {
-		b.config.StaticFields[k] = v
+		b.builder.config.Core.StaticFields[k] = v
 	}
 	return b
 }
 
 func (b *ConfigBuilder) WithHandler(handler slog.Handler) *ConfigBuilder {
-	b.config.Handler = handler
-	b.config.UseSlog = true
+	b.builder.WithHandler(handler)
 	return b
 }
 
 func (b *ConfigBuilder) UseSlog(use bool) *ConfigBuilder {
-	b.config.UseSlog = use
+	b.builder.UseSlog(use)
 	return b
 }
 
 func (b *ConfigBuilder) FromEnvironment() *ConfigBuilder {
-	if level := os.Getenv("LOG_LEVEL"); level != "" {
-		b.WithLevelString(level)
-	}
-	if format := os.Getenv("LOG_FORMAT"); format == "json" {
-		b.WithJSONFormat()
-	}
+	b.builder.FromEnvironment()
 	return b
 }
 
 func (b *ConfigBuilder) Build() *Config {
-	return b.config
+	loggerConfig := b.builder.Build()
+	return &Config{
+		Level:          loggerConfig.Core.Level,
+		Output:         loggerConfig.Output.Writer,
+		Format:         loggerConfig.Formatter.Format,
+		IncludeFile:    loggerConfig.Formatter.IncludeFile,
+		IncludeTime:    loggerConfig.Formatter.IncludeTime,
+		UseShortFile:   loggerConfig.Formatter.UseShortFile,
+		RedactPatterns: loggerConfig.Formatter.RedactPatterns,
+		StaticFields:   loggerConfig.Core.StaticFields,
+		Handler:        loggerConfig.Handler,
+		UseSlog:        loggerConfig.UseSlog,
+	}
 }

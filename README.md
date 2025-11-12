@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ocrosby/go-logging)](https://goreportcard.com/report/github.com/ocrosby/go-logging)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A configurable, production-ready logging library for Go with support for structured logging, request tracing, and fluent interfaces.
+A modern, unified logging library for Go that seamlessly combines traditional logging with structured logging, featuring built-in slog integration, request tracing, fluent interfaces, and advanced async processing capabilities.
 
 ## Table of Contents
 
@@ -30,19 +30,41 @@ A configurable, production-ready logging library for Go with support for structu
 
 ## Features
 
-- **Multiple Log Levels**: TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL
-- **Multiple Output Formats**: Text and JSON
-- **Slog Integration**: Built on Go's standard `log/slog` for flexibility and extensibility
-- **Third-Party Handler Support**: Use any `slog.Handler` implementation (zerolog, zap, etc.)
-- **Fluent Interface**: Chain methods for expressive logging
-- **Request Tracing**: Built-in support for trace IDs, request IDs, and correlation IDs
-- **Structured Logging**: Add contextual fields to log entries
-- **HTTP Middleware**: Automatic request tracing and logging
-- **Sensitive Data Redaction**: Built-in patterns to redact API keys and other sensitive data
-- **Thread-Safe**: Concurrent logging with proper synchronization
-- **Environment Configuration**: Configure from environment variables
-- **Dependency Injection**: Design follows SOLID principles for easy testing
-- **Backward Compatible**: Maintains existing API while adding slog support
+### 🎯 **Core Logging**
+- **Unified Interface**: Single Logger interface with all level methods (Trace, Debug, Info, Warn, Error, Critical)
+- **Dual Backend Support**: Seamlessly switch between standard Go logging and slog
+- **Multiple Output Formats**: Text and JSON with customizable formatting
+- **Thread-Safe**: Full concurrency support with proper synchronization
+
+### 🔧 **Advanced Architecture**  
+- **Consolidated Configuration**: Unified config system with backward compatibility
+- **Async Processing**: Built-in async workers for high-performance logging
+- **Handler Composition**: Advanced handler middleware and composition patterns
+- **Level Dispatch**: Unified level method dispatch with automatic backend delegation
+
+### 🌐 **Slog Integration**
+- **Native slog Support**: Built on Go's standard `log/slog` for maximum compatibility
+- **Custom Handler Support**: Use any `slog.Handler` (zerolog, zap, custom implementations)
+- **Dynamic Level Control**: Runtime level changes with proper slog handler delegation
+- **Attribute Preservation**: Full slog attribute and context support
+
+### 📊 **Request Tracing**
+- **Built-in Trace Support**: Trace IDs, request IDs, and correlation IDs
+- **Context Propagation**: Automatic context field extraction and injection
+- **HTTP Middleware**: Pre-built middleware for automatic request tracing
+- **Header Integration**: Support for standard tracing headers
+
+### 🎨 **Developer Experience**
+- **Fluent Interface**: Expressive method chaining for readable logs
+- **Structured Fields**: Type-safe field attachment with validation
+- **Environment Config**: Automatic configuration from environment variables
+- **Testing Support**: Mock-friendly interfaces with generated mocks
+
+### 🛡️ **Production Ready**
+- **Sensitive Data Redaction**: Built-in patterns for API keys, passwords, tokens
+- **Error Handling**: Graceful degradation and error recovery
+- **Performance Optimized**: Benchmarked and optimized for high-throughput scenarios
+- **Memory Efficient**: Smart field copying and minimal allocations
 
 ## Installation
 
@@ -117,17 +139,21 @@ func main() {
 ### Fluent Interface
 
 ```go
-logger := logging.NewStandardLogger(
-    logging.NewConfig().
-        WithLevel(logging.DebugLevel).
-        WithJSONFormat().
-        Build(),
-)
+// Create logger with fluent capabilities built-in
+logger := logging.NewWithLevel(logging.DebugLevel)
 
+// All loggers now support fluent interface directly
 logger.Fluent().Info().
     Str("service", "api").
     Int("user_id", 12345).
     Msg("User logged in")
+
+// Chain with context and error handling
+logger.Fluent().Error().
+    Err(err).
+    Str("operation", "database_query").
+    Int("retry_count", 3).
+    Msg("Query failed after retries")
 ```
 
 ### Request Tracing
@@ -302,25 +328,51 @@ const (
 
 ### Logger Interface
 
+The Logger interface now provides a **unified, comprehensive API**:
+
 ```go
 type Logger interface {
+    // Core logging methods
+    Log(level Level, msg string, args ...interface{})
+    LogContext(ctx context.Context, level Level, msg string, args ...interface{})
+
+    // Field attachment (immutable pattern)
+    WithField(key string, value interface{}) Logger
+    WithFields(fields map[string]interface{}) Logger
+
+    // Level checking
+    IsLevelEnabled(level Level) bool
+
+    // Level-specific methods (all built-in)
     Trace(msg string, args ...interface{})
     Debug(msg string, args ...interface{})
     Info(msg string, args ...interface{})
     Warn(msg string, args ...interface{})
     Error(msg string, args ...interface{})
     Critical(msg string, args ...interface{})
-    
-    WithField(key string, value interface{}) Logger
-    WithFields(fields map[string]interface{}) Logger
-    
+
+    // Context-aware variants
+    TraceContext(ctx context.Context, msg string, args ...interface{})
+    DebugContext(ctx context.Context, msg string, args ...interface{})
+    InfoContext(ctx context.Context, msg string, args ...interface{})
+    WarnContext(ctx context.Context, msg string, args ...interface{})
+    ErrorContext(ctx context.Context, msg string, args ...interface{})
+    CriticalContext(ctx context.Context, msg string, args ...interface{})
+
+    // Fluent interface (always available)
     Fluent() FluentLogger
-    
-    IsLevelEnabled(level Level) bool
+
+    // Configuration (runtime changes)
     SetLevel(level Level)
     GetLevel() Level
 }
 ```
+
+**Key Improvements:**
+- ✅ **All methods in one interface** - No more type assertions needed
+- ✅ **Context support built-in** - Every level has a context variant  
+- ✅ **Fluent interface included** - Available on all logger instances
+- ✅ **Runtime configuration** - Change levels dynamically
 
 ### Fluent Interface
 
@@ -405,6 +457,23 @@ See the `examples/` directory for complete working examples:
 - [`examples/fluent/`](examples/fluent/) - Fluent interface examples
 - [`examples/http-server/`](examples/http-server/) - HTTP middleware and tracing
 - [`examples/slog/`](examples/slog/) - Slog integration with custom handlers
+- [`examples/new-architecture/`](examples/new-architecture/) - Unified architecture showcase
+- [`examples/custom-handlers/`](examples/custom-handlers/) - Advanced handler patterns
+
+## Documentation
+
+### 📚 **Comprehensive Guides**
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - Deep dive into the unified architecture and design decisions
+- **[Examples Guide](docs/EXAMPLES.md)** - Comprehensive examples for all use cases and patterns
+- **[Migration Guide](docs/MIGRATION.md)** - Smooth migration from older versions with zero breaking changes
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with all interfaces and functions
+
+### 🔧 **Advanced Topics**  
+- **[Advanced Features](docs/ADVANCED_FEATURES.md)** - Async processing, handler composition, custom middleware
+- **[Slog Integration](docs/SLOG_INTEGRATION.md)** - Complete guide to slog backend integration
+
+### 📈 **Project Information**
+- **[Improvements Summary](docs/IMPROVEMENTS_SUMMARY.md)** - Overview of architectural improvements and benefits
 
 ## Testing
 
@@ -474,23 +543,40 @@ This library follows SOLID principles:
 - **Interface Segregation**: Clean, minimal interfaces
 - **Dependency Injection**: Configuration via builder pattern
 
-### Architecture
+### Unified Architecture
+
+The library now uses a **consolidated, modern architecture**:
 
 ```
 pkg/logging/
-├── logger.go           # Core Logger interface
-├── level.go            # Log level definitions
-├── config.go           # Configuration with builder pattern
-├── standard_logger.go  # Standard logger implementation
-├── slog_logger.go      # Slog-based logger implementation
-├── fluent.go           # Fluent interface implementation
-├── factory.go          # Factory functions
-├── providers.go        # Dependency injection providers
-├── trace.go            # Request tracing utilities
-├── middleware.go       # HTTP middleware
-├── redactor.go         # Sensitive data redaction
-└── http.go             # HTTP logging utilities
+├── logger.go              # Unified Logger interface (all methods included)
+├── unified_logger.go      # Single implementation supporting both backends
+├── level.go              # Log level definitions and parsing
+├── level_dispatcher.go   # Unified level method dispatch system
+├── config.go            # Legacy config (backward compatible)
+├── config_new.go        # Modern structured configuration system
+├── async_worker.go      # Generic async processing patterns
+├── factory.go           # Enhanced factory functions
+├── providers.go         # Dependency injection providers
+├── trace.go             # Request tracing with context support
+├── context_extractor.go # Context field extraction utilities
+├── fluent.go            # Fluent interface implementation
+├── middleware.go        # HTTP middleware for tracing
+├── handler_interfaces.go # Unified handler interface system
+├── handler_composition.go # Handler composition and middleware
+├── handler_middleware.go # Handler middleware patterns
+├── redactor.go          # Sensitive data redaction
+├── registry.go          # Handler registry system
+├── outputs.go           # Output implementations with async support
+└── http.go              # HTTP logging utilities
 ```
+
+**Key Architectural Improvements:**
+- 🏗️ **Unified Logger**: Single implementation handles both standard and slog backends
+- ⚡ **Async Workers**: Generic async processing with proper shutdown handling  
+- 🔧 **Handler System**: Comprehensive handler composition and middleware
+- 📊 **Structured Config**: Separated concerns (Core/Formatter/Output)
+- 🎯 **Level Dispatch**: Centralized level method routing logic
 
 ## Contributing
 

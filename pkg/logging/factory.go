@@ -36,6 +36,15 @@ func New(options ...func(*ConfigBuilder)) Logger {
 	return ProvideLogger(config, redactorChain)
 }
 
+// NewWithLoggerConfig creates a new logger using the new configuration structure.
+func NewWithLoggerConfig(config *LoggerConfig) Logger {
+	if config == nil {
+		config = NewLoggerConfig().Build()
+	}
+	redactorChain := ProvideRedactorChainFromLoggerConfig(config)
+	return ProvideLoggerFromConfig(config, redactorChain)
+}
+
 func NewFromEnvironment() Logger {
 	config := NewConfig().
 		FromEnvironment().
@@ -107,27 +116,33 @@ func NewSlogTextLogger(level Level) Logger {
 }
 
 func Trace(msg string, args ...interface{}) {
-	GetDefaultLogger().Trace(msg, args...)
+	logger := GetDefaultLogger()
+	logger.Trace(msg, args...)
 }
 
 func Debug(msg string, args ...interface{}) {
-	GetDefaultLogger().Debug(msg, args...)
+	logger := GetDefaultLogger()
+	logger.Debug(msg, args...)
 }
 
 func Info(msg string, args ...interface{}) {
-	GetDefaultLogger().Info(msg, args...)
+	logger := GetDefaultLogger()
+	logger.Info(msg, args...)
 }
 
 func Warn(msg string, args ...interface{}) {
-	GetDefaultLogger().Warn(msg, args...)
+	logger := GetDefaultLogger()
+	logger.Warn(msg, args...)
 }
 
 func Error(msg string, args ...interface{}) {
-	GetDefaultLogger().Error(msg, args...)
+	logger := GetDefaultLogger()
+	logger.Error(msg, args...)
 }
 
 func Critical(msg string, args ...interface{}) {
-	GetDefaultLogger().Critical(msg, args...)
+	logger := GetDefaultLogger()
+	logger.Critical(msg, args...)
 }
 
 func T() Logger {
@@ -161,4 +176,16 @@ func MustGetEnv(key string) string {
 		os.Exit(1)
 	}
 	return value
+}
+
+// NewStandardLogger creates a standard logger with the specified config and redactor chain.
+// Deprecated: Use New() or NewWithLoggerConfig() for new code.
+func NewStandardLogger(config *Config, redactorChain RedactorChainInterface) Logger {
+	return ProvideLogger(config, redactorChain)
+}
+
+// NewSlogLogger creates a slog-based logger with the specified config and redactor chain.
+// Deprecated: Use New() or NewWithLoggerConfig() for new code.
+func NewSlogLogger(config *Config, redactorChain RedactorChainInterface) Logger {
+	return ProvideLogger(config, redactorChain)
 }

@@ -98,7 +98,6 @@ func RequestLogger(logger Logger, headers ...string) func(http.Handler) http.Han
 				Str("method", r.Method).
 				Str("path", RedactedURL(r.URL.String())).
 				Str("headers", RequestHeaders(r, headers))
-
 			entry.Msg("HTTP Request")
 
 			next.ServeHTTP(w, r)
