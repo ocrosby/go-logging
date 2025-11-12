@@ -1,6 +1,7 @@
 # go-logging
 
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.19-blue)](https://golang.org/dl/)
+[![CI](https://github.com/ocrosby/go-logging/actions/workflows/ci.yml/badge.svg)](https://github.com/ocrosby/go-logging/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ocrosby/go-logging)](https://goreportcard.com/report/github.com/ocrosby/go-logging)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
