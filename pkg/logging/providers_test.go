@@ -25,7 +25,7 @@ func TestProvideConfigWithLevel(t *testing.T) {
 		t.Fatal("expected config to be provided")
 	}
 
-	if config.Level != DebugLevel {
+	if config != nil && config.Level != DebugLevel {
 		t.Errorf("expected level %v, got %v", DebugLevel, config.Level)
 	}
 }
@@ -36,8 +36,8 @@ func TestProvideLoggerConfig(t *testing.T) {
 		t.Fatal("expected logger config to be provided")
 	}
 
-	if config.Core.Level != InfoLevel {
-		t.Errorf("expected default level %v, got %v", InfoLevel, config.Core.Level)
+	if config != nil && config.Core.Level != InfoLevel {
+		t.Errorf("expected level %v, got %v", InfoLevel, config.Core.Level)
 	}
 }
 
@@ -47,7 +47,7 @@ func TestProvideLoggerConfigWithLevel(t *testing.T) {
 		t.Fatal("expected logger config to be provided")
 	}
 
-	if config.Core.Level != WarnLevel {
+	if config != nil && config.Core.Level != WarnLevel {
 		t.Errorf("expected level %v, got %v", WarnLevel, config.Core.Level)
 	}
 }
