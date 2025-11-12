@@ -8,6 +8,13 @@ import (
 	"github.com/ocrosby/go-logging/pkg/logging"
 )
 
+// This example shows advanced handler features.
+// For most use cases, you should use the simple factory functions:
+//   logger := logging.NewSimple()
+//   logger := logging.NewEasyJSON()
+//
+// Only use these advanced features if you need custom behavior.
+
 func main() {
 	exampleMultiHandler()
 	exampleHandlerBuilder()

@@ -7,13 +7,13 @@ import (
 )
 
 func main() {
-	config := logging.NewConfig().
-		WithLevel(logging.DebugLevel).
-		WithJSONFormat().
+	// Much simpler setup - just one line!
+	logger := logging.NewEasyBuilder().
+		Debug(). // Set to debug level
+		JSON().  // Use JSON format
 		Build()
-	redactorChain := logging.ProvideRedactorChain(config)
-	logger := logging.NewStandardLogger(config, redactorChain)
 
+	// Everything else stays the same
 	logger.Fluent().Info().
 		Str("service", "fluent-example").
 		Str("version", "1.0.0").

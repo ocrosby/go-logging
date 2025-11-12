@@ -2,6 +2,31 @@
 
 This example demonstrates advanced handler customization features in the go-logging package.
 
+## ⚠️ For Most Users - Start Simple!
+
+You probably don't need these advanced features! Try the simple approach first:
+
+```go
+import "github.com/ocrosby/go-logging/pkg/logging"
+
+// Simple text logging
+logger := logging.NewSimple()
+logger.Info("Hello world")
+
+// Simple JSON logging  
+logger := logging.NewEasyJSON()
+logger.Info("Hello world")
+
+// Progressive configuration
+logger := logging.NewEasyBuilder().
+    Debug().
+    JSON().
+    Field("service", "my-app").
+    Build()
+```
+
+**Only use the advanced features below if the simple functions don't meet your needs.**
+
 ## Features Demonstrated
 
 ### 1. Multi-Handler
