@@ -67,6 +67,22 @@ BREAKING CHANGE: Default log level changed from DEBUG to INFO
 
 ## CI Integration
 
+### GitHub Actions
+The repository includes a properly configured GitHub Actions workflow (`.github/workflows/ci.yml`) that:
+- Uses `task ci-test` for proper coverage validation
+- Includes fallback validation for CI systems without task runner
+- Publishes coverage reports to Codecov
+- Uses appropriate timeouts and error handling
+
+### Jenkins
+A complete Jenkinsfile is provided with:
+- Proper Go setup and dependency management
+- Task runner installation and usage  
+- Coverage validation with 85% threshold
+- HTML coverage report publishing
+- Integration test execution with proper timeouts
+- Comprehensive error handling and troubleshooting messages
+
 ### For Jenkins/CI Systems
 **Important**: Use `task ci` or `task test-coverage-check` instead of `go test ./...`
 
@@ -79,6 +95,20 @@ task ci
 
 # Or just test with coverage validation
 task test-coverage-check
+```
+
+**Fallback for systems without Task runner:**
+```bash
+# Test only the main logging package with proper timeout
+go test -v -timeout=60s -coverprofile=logging-coverage.out ./pkg/logging
+
+# Validate coverage meets 85% threshold
+COVERAGE=$(go tool cover -func=logging-coverage.out | tail -1 | awk '{print $3}' | sed 's/%//')
+if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+  echo "❌ Coverage ${COVERAGE}% is below required 85% threshold"
+  exit 1
+fi
+echo "✅ Coverage ${COVERAGE}% meets the 85% threshold requirement"
 ```
 
 **Incorrect Commands (will fail in CI):**
