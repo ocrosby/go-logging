@@ -4,6 +4,7 @@ vars:
   PACKAGE: github.com/ocrosby/go-logging
   COVERAGE_FILE: coverage.out
   COVERAGE_HTML: coverage.html
+  COVERAGE_THRESHOLD: 85.0
 
 tasks:
   default:
@@ -37,6 +38,34 @@ tasks:
     generates:
       - "{{.COVERAGE_FILE}}"
       - "{{.COVERAGE_HTML}}"
+
+  test-coverage-check:
+    desc: Run tests with coverage validation ({{.COVERAGE_THRESHOLD}}% threshold)
+    cmds:
+      - go test -v -coverprofile=logging-coverage.out ./pkg/logging
+      - |
+        COVERAGE=$(go tool cover -func=logging-coverage.out | tail -1 | awk '{print $3}' | sed 's/%//')
+        echo "📊 Coverage Report for pkg/logging:"
+        echo "======================================"
+        echo "Coverage: ${COVERAGE}%"
+        echo "Required: {{.COVERAGE_THRESHOLD}}%"
+        echo ""
+        echo "Files with lowest coverage:"
+        go tool cover -func=logging-coverage.out | grep -v "total:" | sort -k3 -n | head -10
+        echo ""
+        COVERAGE_INT=$(echo "$COVERAGE * 10" | bc | cut -d. -f1)
+        THRESHOLD_INT=$(echo "{{.COVERAGE_THRESHOLD}} * 10" | bc | cut -d. -f1)
+        if [ "$COVERAGE_INT" -lt "$THRESHOLD_INT" ]; then
+          echo "❌ Coverage ${COVERAGE}% is below the required {{.COVERAGE_THRESHOLD}}% threshold"
+          echo ""
+          echo "Functions/files needing more coverage:"
+          go tool cover -func=logging-coverage.out | grep -v "100.0%" | sort -k3 -n | head -15
+          exit 1
+        else
+          echo "✅ Coverage ${COVERAGE}% meets the {{.COVERAGE_THRESHOLD}}% threshold requirement"
+        fi
+    generates:
+      - "logging-coverage.out"
 
   test-race:
     desc: Run tests with race detector
@@ -148,11 +177,11 @@ tasks:
       - go run main.go
 
   check:
-    desc: Run all checks (format, lint, test, build)
+    desc: Run all checks (format, lint, test with coverage validation, build)
     cmds:
       - task: fmt
       - task: lint
-      - task: test
+      - task: test-coverage-check
       - task: build
 
   ci:
@@ -162,8 +191,15 @@ tasks:
       - task: generate-mocks
       - task: generate-wire
       - task: lint
-      - task: test-race
+      - task: test-coverage-check
       - task: build
+
+  ci-test:
+    desc: Run CI test pipeline with coverage validation
+    cmds:
+      - task: generate-mocks
+      - task: generate-wire
+      - task: test-coverage-check
 
   all:
     desc: Generate, build and test everything

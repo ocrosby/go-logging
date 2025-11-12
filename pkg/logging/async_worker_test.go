@@ -24,7 +24,7 @@ func TestNewAsyncWorker(t *testing.T) {
 	}
 
 	worker := NewAsyncWorker(config)
-	defer worker.Stop()
+	defer func() { _ = worker.Stop() }()
 
 	if worker == nil {
 		t.Fatal("expected worker to be created")
@@ -67,7 +67,7 @@ func TestAsyncWorker_Submit(t *testing.T) {
 	}
 
 	worker := NewAsyncWorker(config)
-	defer worker.Stop()
+	defer func() { _ = worker.Stop() }()
 
 	// Test successful submit
 	if !worker.Submit("item1") {
@@ -109,7 +109,7 @@ func TestAsyncWorker_SubmitBlocking(t *testing.T) {
 	}
 
 	worker := NewAsyncWorker(config)
-	defer worker.Stop()
+	defer func() { _ = worker.Stop() }()
 
 	// Submit first item
 	if !worker.SubmitBlocking("item1") {
@@ -232,7 +232,7 @@ func TestAsyncWorker_QueueMethods(t *testing.T) {
 	}
 
 	worker := NewAsyncWorker(config)
-	defer worker.Stop()
+	defer func() { _ = worker.Stop() }()
 
 	// Test initial state
 	if worker.QueueSize() != 0 {
@@ -278,7 +278,7 @@ func TestAsyncWorker_DrainOnShutdown(t *testing.T) {
 	}
 
 	// Stop immediately (should drain queue)
-	worker.Stop()
+	_ = worker.Stop()
 
 	mu.Lock()
 	processedCount := len(processed)

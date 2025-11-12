@@ -83,18 +83,24 @@ func (w *AsyncWorker[T]) run() {
 		case item := <-w.queue:
 			_ = w.processor(item)
 		case <-w.done:
-			// Drain remaining items
-			for {
-				select {
-				case item := <-w.queue:
-					_ = w.processor(item)
-				default:
-					if w.onShutdown != nil {
-						_ = w.onShutdown()
-					}
-					return
-				}
+			w.drainAndShutdown()
+			return
+		}
+	}
+}
+
+// drainAndShutdown drains remaining items and calls shutdown callback
+func (w *AsyncWorker[T]) drainAndShutdown() {
+	// Drain remaining items
+	for {
+		select {
+		case item := <-w.queue:
+			_ = w.processor(item)
+		default:
+			if w.onShutdown != nil {
+				_ = w.onShutdown()
 			}
+			return
 		}
 	}
 }

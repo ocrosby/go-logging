@@ -11,6 +11,7 @@ func TestProvideConfig(t *testing.T) {
 	config := ProvideConfig()
 	if config == nil {
 		t.Fatal("expected config to be provided")
+		return
 	}
 
 	if config.Level != InfoLevel {

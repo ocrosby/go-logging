@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const testOutputMessage = "test message"
+
 type closableBuffer struct {
 	*bytes.Buffer
 	closed bool
@@ -35,6 +37,7 @@ func TestNewWriterOutput(t *testing.T) {
 
 	if output == nil {
 		t.Fatal("expected output to be created")
+		return
 	}
 
 	if output.writer != buf {
@@ -209,7 +212,7 @@ func TestBufferedOutput_Write(t *testing.T) {
 	buffered := NewBufferedOutput(underlying, 1024, 100*time.Millisecond)
 	defer buffered.Close()
 
-	testData := []byte("test message")
+	testData := []byte(testOutputMessage)
 	err := buffered.Write(testData)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -221,7 +224,7 @@ func TestBufferedOutput_Write(t *testing.T) {
 		t.Errorf("unexpected error on flush: %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "test message") {
+	if !strings.Contains(buf.String(), testOutputMessage) {
 		t.Error("expected message to be written after flush")
 	}
 }
@@ -256,17 +259,17 @@ func TestNewMultiOutput(t *testing.T) {
 
 	multi := NewMultiOutput(out1, out2)
 
-	testData := []byte("test message")
+	testData := []byte(testOutputMessage)
 	err := multi.Write(testData)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if buf1.String() != "test message" {
+	if buf1.String() != testOutputMessage {
 		t.Error("expected message in first buffer")
 	}
 
-	if buf2.String() != "test message" {
+	if buf2.String() != testOutputMessage {
 		t.Error("expected message in second buffer")
 	}
 }
@@ -282,7 +285,7 @@ func TestMultiOutput_AddRemoveOutput(t *testing.T) {
 	multi.AddOutput(out2)
 
 	// Write to both
-	testData := []byte("test message")
+	testData := []byte(testOutputMessage)
 	err := multi.Write(testData)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -298,7 +301,7 @@ func TestMultiOutput_AddRemoveOutput(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if buf1.String() != "test message" {
+	if buf1.String() != testOutputMessage {
 		t.Error("expected first buffer to have only first message after removal")
 	}
 

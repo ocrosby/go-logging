@@ -2,7 +2,6 @@ package logging
 
 import (
 	"io"
-	"log/slog"
 	"os"
 	"regexp"
 )
@@ -100,20 +99,4 @@ func ProvideLogger(config *Config, redactorChain RedactorChainInterface) Logger 
 // New provider using new config structure
 func ProvideLoggerFromConfig(config *LoggerConfig, redactorChain RedactorChainInterface) Logger {
 	return NewUnifiedLogger(config, redactorChain)
-}
-
-func levelToSlogLevel(level Level) slog.Level {
-	levelMap := map[Level]slog.Level{
-		TraceLevel:    slog.Level(-8), // LevelTrace
-		DebugLevel:    slog.LevelDebug,
-		InfoLevel:     slog.LevelInfo,
-		WarnLevel:     slog.LevelWarn,
-		ErrorLevel:    slog.LevelError,
-		CriticalLevel: slog.Level(12), // LevelCritical
-	}
-
-	if slogLevel, ok := levelMap[level]; ok {
-		return slogLevel
-	}
-	return slog.LevelInfo
 }

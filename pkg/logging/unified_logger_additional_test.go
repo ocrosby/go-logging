@@ -176,7 +176,7 @@ func TestUnifiedLogger_LevelMethods(t *testing.T) {
 func TestUnifiedLogger_ContextMethods(t *testing.T) {
 	buf := &bytes.Buffer{}
 	config := NewLoggerConfig().
-		WithLevel(InfoLevel).
+		WithLevel(TraceLevel).
 		WithWriter(buf).
 		WithTextFormat().
 		Build()
@@ -184,12 +184,21 @@ func TestUnifiedLogger_ContextMethods(t *testing.T) {
 
 	ctx := WithTraceID(context.Background(), "ctx-123")
 
-	// Test context methods (only test Info since others are similar)
+	// Test all context methods
+	logger.TraceContext(ctx, "trace context %s", "message")
+	logger.DebugContext(ctx, "debug context %s", "message")
 	logger.InfoContext(ctx, "info context %s", "message")
+	logger.WarnContext(ctx, "warn context %s", "message")
+	logger.ErrorContext(ctx, "error context %s", "message")
+	logger.CriticalContext(ctx, "critical context %s", "message")
 
 	output := buf.String()
-	if !contains(output, "info context message") {
-		t.Error("expected info context message in output")
+
+	contextLevels := []string{"trace", "debug", "info", "warn", "error", "critical"}
+	for _, level := range contextLevels {
+		if !contains(output, level+" context message") {
+			t.Errorf("expected %s context message in output, got: %s", level, output)
+		}
 	}
 }
 

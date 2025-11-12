@@ -73,11 +73,7 @@ func ExtractContextFields(ctx context.Context) ContextFields {
 // Context keys (duplicated to avoid circular import)
 type contextKey string
 
-const (
-	traceIDKey       = contextKey("trace_id")
-	requestIDKey     = contextKey("request_id")
-	correlationIDKey = contextKey("correlation_id")
-)
+// Remove unused constants - only keep the contextKey type
 
 // AddContextFieldsToMap adds context fields to a map for JSON/structured output
 func (cf ContextFields) AddToMap(data map[string]interface{}) {

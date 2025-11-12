@@ -43,7 +43,6 @@ func TestMoreMissingMethods(t *testing.T) {
 }
 
 func TestFormatterEdgeCases(t *testing.T) {
-
 	// Test formatters with edge cases
 	config := NewFormatterConfig().
 		WithJSONFormat().

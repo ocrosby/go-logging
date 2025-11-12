@@ -25,7 +25,7 @@ func TestTracingMiddleware(t *testing.T) {
 			t.Error("expected trace ID in context")
 		}
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("test response"))
+		_, _ = w.Write([]byte("test response"))
 	})
 
 	// Wrap with tracing middleware
@@ -138,7 +138,7 @@ func TestRequestLogger(t *testing.T) {
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("created"))
+		_, _ = w.Write([]byte("created"))
 	})
 
 	middleware := RequestLogger(logger, "User-Agent", "Content-Type")

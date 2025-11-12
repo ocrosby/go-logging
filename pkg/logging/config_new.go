@@ -7,6 +7,10 @@ import (
 	"regexp"
 )
 
+const (
+	jsonFormatString = "json"
+)
+
 // CoreConfig contains the core logging configuration.
 type CoreConfig struct {
 	Level        Level
@@ -215,7 +219,7 @@ func (b *LoggerConfigBuilder) FromEnvironment() *LoggerConfigBuilder {
 			b.config.Core.Level = l
 		}
 	}
-	if format := os.Getenv("LOG_FORMAT"); format == "json" {
+	if format := os.Getenv("LOG_FORMAT"); format == jsonFormatString {
 		b.config.Formatter.Format = JSONFormat
 	}
 	return b

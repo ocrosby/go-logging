@@ -52,23 +52,23 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
 
-      - name: Install tools
+      - name: Install Task runner
         run: |
-          go install go.uber.org/mock/mockgen@latest
-          go install github.com/google/wire/cmd/wire@latest
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 
-      - name: Generate mocks
+      - name: Install bc for numeric comparison  
+        run: sudo apt-get update && sudo apt-get install -y bc
+
+      - name: Install development tools
+        run: task install-tools
+
+      - name: Run tests with coverage validation
         run: |
-          mockgen -source=pkg/logging/logger.go -destination=pkg/logging/mocks/mock_logger.go -package=mocks
-          mockgen -source=pkg/logging/redactor.go -destination=pkg/logging/mocks/mock_redactor.go -package=mocks
-
-      - name: Generate wire
-        run: |
-          cd examples/di
-          wire
-
-      - name: Run tests
-        run: go test -v -race -coverprofile=coverage.out ./...
+          # Run tests on all packages for general testing first
+          go test -v -race -coverprofile=coverage.out ./...
+          
+          # Run CI test pipeline (includes mocks, wire generation, and coverage validation)
+          task ci-test
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

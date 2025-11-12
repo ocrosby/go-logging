@@ -71,6 +71,7 @@ func TestNewConfig(t *testing.T) {
 	builder := NewConfig()
 	if builder == nil {
 		t.Fatal("expected builder to be created")
+		return
 	}
 
 	if builder.builder == nil {

@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const testMessage = "test message"
+
 func TestNewJSONFormatter(t *testing.T) {
 	// Test with nil config
 	formatter := NewJSONFormatter(nil)
@@ -21,6 +23,7 @@ func TestNewJSONFormatter(t *testing.T) {
 	formatter2 := NewJSONFormatter(config)
 	if formatter2 == nil {
 		t.Fatal("expected formatter to be created with custom config")
+		return
 	}
 
 	if formatter2.config != config {
@@ -39,7 +42,7 @@ func TestJSONFormatter_Format(t *testing.T) {
 
 	entry := LogEntry{
 		Level:     InfoLevel,
-		Message:   "test message",
+		Message:   testMessage,
 		Timestamp: time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC),
 		Fields: map[string]interface{}{
 			"user_id": 123,
@@ -64,7 +67,7 @@ func TestJSONFormatter_Format(t *testing.T) {
 		t.Errorf("expected level 'INFO', got %v", result["level"])
 	}
 
-	if result["message"] != "test message" {
+	if result["message"] != testMessage {
 		t.Errorf("expected message 'test message', got %v", result["message"])
 	}
 
@@ -93,7 +96,7 @@ func TestJSONFormatter_Format_WithFile(t *testing.T) {
 
 	entry := LogEntry{
 		Level:   InfoLevel,
-		Message: "test message",
+		Message: testMessage,
 		File:    "/path/to/test.go",
 		Line:    42,
 		Context: context.Background(),
@@ -177,7 +180,7 @@ func TestTextFormatter_Format(t *testing.T) {
 
 	entry := LogEntry{
 		Level:     InfoLevel,
-		Message:   "test message",
+		Message:   testMessage,
 		Timestamp: time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC),
 		Fields: map[string]interface{}{
 			"user_id": 123,
@@ -202,7 +205,7 @@ func TestTextFormatter_Format(t *testing.T) {
 		t.Error("expected level in output")
 	}
 
-	if !strings.Contains(output, "test message") {
+	if !strings.Contains(output, testMessage) {
 		t.Error("expected message in output")
 	}
 
@@ -285,6 +288,7 @@ func TestNewConsoleFormatter(t *testing.T) {
 	formatter := NewConsoleFormatter(nil, true)
 	if formatter == nil {
 		t.Fatal("expected formatter to be created with nil config")
+		return
 	}
 
 	if !formatter.useColors {
@@ -296,6 +300,7 @@ func TestNewConsoleFormatter(t *testing.T) {
 	formatter2 := NewConsoleFormatter(config, false)
 	if formatter2 == nil {
 		t.Fatal("expected formatter to be created")
+		return
 	}
 
 	if formatter2.useColors {
