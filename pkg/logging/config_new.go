@@ -9,6 +9,7 @@ import (
 
 const (
 	jsonFormatString = "json"
+	textFormatString = "text"
 )
 
 // CoreConfig contains the core logging configuration.

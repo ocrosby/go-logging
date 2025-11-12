@@ -131,7 +131,7 @@ func (r *HandlerRegistry) Clear() {
 type JSONHandlerFactory struct{}
 
 func (f *JSONHandlerFactory) Name() string {
-	return "json"
+	return jsonFormatString
 }
 
 func (f *JSONHandlerFactory) ConfigType() interface{} {
@@ -153,7 +153,7 @@ func (f *JSONHandlerFactory) Create(config interface{}) (slog.Handler, error) {
 type TextHandlerFactory struct{}
 
 func (f *TextHandlerFactory) Name() string {
-	return "text"
+	return textFormatString
 }
 
 func (f *TextHandlerFactory) ConfigType() interface{} {
