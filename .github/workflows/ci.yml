@@ -10,6 +10,7 @@ on:
 
 env:
   GO_VERSION: '1.24'
+  COVERAGE_THRESHOLD: 85
 
 jobs:
   lint:
@@ -64,16 +65,36 @@ jobs:
 
       - name: Run tests with coverage validation
         run: |
-          # Run tests on all packages for general testing first
-          go test -v -race -coverprofile=coverage.out ./...
-          
-          # Run CI test pipeline (includes mocks, wire generation, and coverage validation)
+          # Use task ci-test which properly validates coverage on ./pkg/logging only
+          # This avoids including mocks package which has low coverage by design
           task ci-test
+          
+      - name: Fallback coverage validation (for reference)
+        if: failure()
+        run: |
+          # Alternative approach for CI systems that cannot use task runner
+          echo "🔄 Running fallback coverage validation..."
+          
+          # Test only the main logging package with proper timeout
+          go test -v -timeout=60s -coverprofile=logging-coverage.out ./pkg/logging
+          
+          # Validate coverage meets 85% threshold
+          COVERAGE=$(go tool cover -func=logging-coverage.out | tail -1 | awk '{print $3}' | sed 's/%//')
+          echo "📊 Coverage: ${COVERAGE}%"
+          echo "📋 Required: 85%"
+          
+          # Check if coverage meets threshold
+          if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
+            echo "❌ Coverage ${COVERAGE}% is below required ${{ env.COVERAGE_THRESHOLD }}% threshold"
+            exit 1
+          fi
+          
+          echo "✅ Coverage ${COVERAGE}% meets the ${{ env.COVERAGE_THRESHOLD }}% threshold requirement"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          file: ./coverage.out
+          file: ./logging-coverage.out
           flags: unittests
           fail_ci_if_error: false
 
@@ -133,6 +154,6 @@ jobs:
 
       - name: Run examples
         run: |
-          timeout 5s go run ./examples/basic/main.go || true
-          timeout 5s go run ./examples/fluent/main.go || true
-          timeout 5s go run ./examples/di/. || true
+          timeout 10s go run ./examples/basic/main.go || true
+          timeout 10s go run ./examples/fluent/main.go || true
+          timeout 10s go run ./examples/di/. || true
