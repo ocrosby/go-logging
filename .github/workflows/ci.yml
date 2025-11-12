@@ -26,13 +26,15 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Install golangci-lint
+      - name: Install Task runner
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.8
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 
-      - name: Run golangci-lint
-        run: golangci-lint run ./...
+      - name: Install development tools
+        run: task install-tools
+
+      - name: Run linting
+        run: task lint
 
   test:
     name: Test
@@ -47,12 +49,6 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Verify dependencies
-        run: go mod verify
-
       - name: Install Task runner
         run: |
           sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
@@ -60,36 +56,17 @@ jobs:
       - name: Install bc for numeric comparison  
         run: sudo apt-get update && sudo apt-get install -y bc
 
+      - name: Download dependencies
+        run: task deps
+
+      - name: Verify dependencies
+        run: task tidy
+
       - name: Install development tools
         run: task install-tools
 
       - name: Run tests with coverage validation
-        run: |
-          # Use task ci-test which properly validates coverage on ./pkg/logging only
-          # This avoids including mocks package which has low coverage by design
-          task ci-test
-          
-      - name: Fallback coverage validation (for reference)
-        if: failure()
-        run: |
-          # Alternative approach for CI systems that cannot use task runner
-          echo "🔄 Running fallback coverage validation..."
-          
-          # Test only the main logging package with proper timeout
-          go test -v -timeout=60s -coverprofile=logging-coverage.out ./pkg/logging
-          
-          # Validate coverage meets 85% threshold
-          COVERAGE=$(go tool cover -func=logging-coverage.out | tail -1 | awk '{print $3}' | sed 's/%//')
-          echo "📊 Coverage: ${COVERAGE}%"
-          echo "📋 Required: 85%"
-          
-          # Check if coverage meets threshold
-          if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
-            echo "❌ Coverage ${COVERAGE}% is below required ${{ env.COVERAGE_THRESHOLD }}% threshold"
-            exit 1
-          fi
-          
-          echo "✅ Coverage ${COVERAGE}% meets the ${{ env.COVERAGE_THRESHOLD }}% threshold requirement"
+        run: task ci-test
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -112,17 +89,15 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
+      - name: Install Task runner
+        run: |
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+
       - name: Download dependencies
-        run: go mod download
+        run: task deps
 
       - name: Build
-        run: go build -v ./...
-
-      - name: Build examples
-        run: |
-          go build -v ./examples/basic
-          go build -v ./examples/fluent
-          go build -v ./examples/http-server
+        run: task build
 
   integration:
     name: Integration Tests
@@ -138,22 +113,23 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
+      - name: Install Task runner
+        run: |
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+
       - name: Download dependencies
-        run: go mod download
+        run: task deps
 
       - name: Install tools
-        run: |
-          go install go.uber.org/mock/mockgen@latest
-          go install github.com/google/wire/cmd/wire@latest
+        run: task install-tools
 
       - name: Generate code
         run: |
-          mockgen -source=pkg/logging/logger.go -destination=pkg/logging/mocks/mock_logger.go -package=mocks
-          mockgen -source=pkg/logging/redactor.go -destination=pkg/logging/mocks/mock_redactor.go -package=mocks
-          cd examples/di && wire
+          task generate-mocks
+          task generate-wire
 
       - name: Run examples
         run: |
-          timeout 10s go run ./examples/basic/main.go || true
-          timeout 10s go run ./examples/fluent/main.go || true
-          timeout 10s go run ./examples/di/. || true
+          timeout 10s task run-basic || true
+          timeout 10s task run-fluent || true
+          timeout 10s task run-di || true
