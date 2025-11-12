@@ -33,6 +33,14 @@ A modern, unified logging library for Go that seamlessly combines traditional lo
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
 
+## 🚀 Quick Navigation
+
+- **New to go-logging?** → Start with [`examples/basic/`](examples/basic/) 
+- **Need examples?** → See [**Examples Guide**](examples/README.md) for all examples with learning paths
+- **Complex setup?** → Check out [YAML Configuration](#yaml-configuration) or [`examples/yaml-config/`](examples/yaml-config/)
+- **Web application?** → Try [`examples/http-server/`](examples/http-server/) for HTTP middleware
+- **Production ready?** → Use [`examples/slog/`](examples/slog/) for high-performance logging
+
 ## Features
 
 ### 🎯 **Core Logging**
@@ -743,6 +751,8 @@ handler := logging.RequestLogger(logger, "User-Agent", "X-Custom-Header")(yourHa
 ```
 
 ## Examples
+
+📖 **[Complete Examples Guide](examples/README.md)** - Comprehensive documentation for all examples with learning paths and use case recommendations.
 
 See the `examples/` directory for complete working examples:
 
