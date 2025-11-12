@@ -61,6 +61,30 @@ BREAKING CHANGE: Default log level changed from DEBUG to INFO
 ## Development Commands
 
 - `task test-coverage-check`: Run tests with 85% coverage validation
-- `task ci`: Run full CI pipeline locally
+- `task ci`: Run full CI pipeline locally (recommended for CI systems)
 - `task lint`: Run linting checks
 - `task fmt`: Format code
+
+## CI Integration
+
+### For Jenkins/CI Systems
+**Important**: Use `task ci` or `task test-coverage-check` instead of `go test ./...`
+
+The project has a 85% test coverage requirement. Running `go test ./...` will include the mocks package (which has low coverage by design) and cause CI failures. 
+
+**Correct CI Commands:**
+```bash
+# Full CI pipeline (recommended)
+task ci
+
+# Or just test with coverage validation
+task test-coverage-check
+```
+
+**Incorrect Commands (will fail in CI):**
+```bash
+go test ./...  # Includes mocks, reports combined low coverage
+go test -coverprofile=coverage.out ./...  # Same issue
+```
+
+The coverage validation specifically tests `./pkg/logging` which maintains 86%+ coverage.
