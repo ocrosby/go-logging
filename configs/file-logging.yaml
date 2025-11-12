@@ -1,0 +1,20 @@
+# File Logging Configuration
+# Logs to a file with rotation-friendly settings
+level: info
+format: json
+include_file: true
+include_time: true
+use_short_file: true
+
+static_fields:
+  service: my-app
+  component: file-logger
+
+output:
+  type: file
+  target: ~/logs/application.log
+
+redact_patterns:
+  - "password=[^\\s]*"
+  - "token=[^\\s]*"
+  - "apikey=[^\\s]*"

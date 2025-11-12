@@ -1,0 +1,28 @@
+# Production Configuration
+# Optimized for production with structured JSON logging
+preset: production
+
+level: info
+format: json
+include_file: false
+include_time: true
+use_short_file: true
+use_slog: true
+
+static_fields:
+  environment: production
+  service: my-app
+  version: "1.0.0"
+  region: "us-east-1"
+
+output:
+  type: stdout
+
+# Production-grade redaction patterns
+redact_patterns:
+  - "password=[^\\s]*"
+  - "token=[^\\s]*"
+  - "apikey=[^\\s]*"
+  - "api_key=[^\\s]*"
+  - "secret=[^\\s]*"
+  - "authorization:[^\\s]*"

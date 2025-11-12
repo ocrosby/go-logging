@@ -13,7 +13,8 @@ A modern, unified logging library for Go that seamlessly combines traditional lo
 - [Features](#features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Simplified Interface](#simplified-interface)
+- [Simplified Interface](#simplified-interface)  
+- [YAML Configuration](#yaml-configuration)
 - [Usage](#usage)
   - [Basic Logging](#basic-logging)
   - [Fluent Interface](#fluent-interface)
@@ -204,6 +205,58 @@ logger := logging.NewFromEnvSimple()
 logger.Info("Configured from LOG_LEVEL and LOG_FORMAT")
 ```
 
+### YAML Configuration (New!)
+
+The **most powerful way** to configure complex logging setups declaratively:
+
+```go
+// Load from YAML file
+logger, err := logging.NewFromYAMLFile("config/logging.yaml")
+if err != nil {
+    log.Fatal(err)
+}
+
+// Or from environment variable (falls back to simple if not set)
+logger := logging.NewFromYAMLEnv("LOG_CONFIG_FILE")
+
+// Or embedded YAML string
+yamlConfig := `
+preset: production
+static_fields:
+  service: my-app
+  version: "1.0.0"
+`
+logger, err := logging.LoadFromYAMLString(yamlConfig)
+```
+
+**Example YAML Configuration:**
+```yaml
+# Use a preset for common configurations
+preset: production
+
+# Core settings
+level: info
+format: json
+include_time: true
+use_slog: true
+
+# Static fields included in all log entries
+static_fields:
+  service: my-app
+  version: "1.0.0"
+  environment: production
+
+# Output configuration
+output:
+  type: stdout  # or stderr, file
+
+# Security: automatically redact sensitive data
+redact_patterns:
+  - "password=[^\\s]*"
+  - "token=[^\\s]*"
+  - "apikey=[^\\s]*"
+```
+
 ### Advanced Fluent Interface
 
 For complex log entries, use the fluent interface:
@@ -275,6 +328,58 @@ logger := logging.NewEasyBuilder().
     JSON().     // Enable JSON format
     Build()
 ```
+
+### YAML Configuration
+
+For complex logging setups, YAML configuration provides the most control:
+
+#### Available Presets
+
+| Preset | Level | Format | File Info | slog | Use Case |
+|--------|-------|--------|-----------|------|----------|
+| `development` | debug | text | ✅ | ❌ | Local development |
+| `production` | info | json | ❌ | ✅ | Production systems |
+| `debug` | trace | text | ✅ (full) | ❌ | Debugging issues |
+| `minimal` | info | text | ❌ | ❌ | Simple applications |
+| `structured` | info | json | ✅ | ✅ | Microservices |
+
+#### Complete YAML Schema
+
+```yaml
+# Use a preset (optional)
+preset: development | production | debug | minimal | structured
+
+# Core configuration
+level: trace | debug | info | warn | error | critical
+static_fields:
+  service: "my-app"
+  version: "1.0.0"
+
+# Formatting
+format: text | json
+include_file: true | false
+include_time: true | false
+use_short_file: true | false
+
+# Output
+output:
+  type: stdout | stderr | file
+  target: "/path/to/logfile"  # required for file output
+
+# Slog backend (optional)
+use_slog: true | false
+
+# Security patterns (optional)
+redact_patterns:
+  - "password=[^\\s]*"
+  - "token=[^\\s]*"
+```
+
+#### File Output Features
+
+- **Automatic directory creation**: Parent directories are created automatically
+- **Home directory expansion**: `~/logs/app.log` expands to user home
+- **Append mode**: Compatible with log rotation tools
 
 ### Request Tracing
 
@@ -563,6 +668,19 @@ logger := logging.NewEasyBuilder().
     Build()
 ```
 
+#### YAML Configuration Functions (Most Powerful)
+
+```go
+// Load from YAML file (recommended for complex setups)
+logger, err := logging.NewFromYAMLFile("configs/production.yaml")
+
+// Load from environment variable with fallback
+logger := logging.NewFromYAMLEnv("LOG_CONFIG_FILE")
+
+// Load from YAML string
+logger, err := logging.LoadFromYAMLString(yamlConfig)
+```
+
 #### Advanced Factory Functions
 
 ```go
@@ -633,6 +751,7 @@ See the `examples/` directory for complete working examples:
 - [`examples/simple/structured/`](examples/simple/structured/) - Simple structured logging
 - [`examples/simple/configuration/`](examples/simple/configuration/) - Configuration examples
 - [`examples/simple/context-logging/`](examples/simple/context-logging/) - Context and tracing
+- [`examples/yaml-config/`](examples/yaml-config/) - YAML-based configuration examples
 
 ### Advanced Examples  
 - [`examples/fluent/`](examples/fluent/) - Fluent interface examples

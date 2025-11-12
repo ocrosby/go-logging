@@ -1,0 +1,23 @@
+# Development Configuration
+# Perfect for local development with detailed logging
+preset: development
+
+level: debug
+format: text
+include_file: true
+include_time: true
+use_short_file: true
+
+static_fields:
+  environment: development
+  service: my-app
+  version: "1.0.0-dev"
+
+output:
+  type: stdout
+
+# Optional: Add patterns to redact sensitive data
+redact_patterns:
+  - "password=\\w+"
+  - "token=\\w+"
+  - "apikey=\\w+"

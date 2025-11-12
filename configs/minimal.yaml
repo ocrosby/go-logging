@@ -1,0 +1,11 @@
+# Minimal Configuration
+# Absolute minimum setup for basic logging
+preset: minimal
+
+level: info
+format: text
+include_file: false
+include_time: false
+
+output:
+  type: stdout

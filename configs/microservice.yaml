@@ -1,0 +1,33 @@
+# Microservice Configuration
+# Comprehensive configuration for microservice deployments
+preset: structured
+
+level: info
+format: json
+include_file: false
+include_time: true
+use_short_file: true
+use_slog: true
+
+static_fields:
+  service: user-service
+  version: "2.1.0"
+  environment: production
+  region: us-west-2
+  team: platform
+  component: api
+
+output:
+  type: stdout
+
+# Comprehensive security patterns for microservices
+redact_patterns:
+  - "password=[^\\s&]*"
+  - "token=[^\\s&]*"
+  - "apikey=[^\\s&]*"
+  - "api_key=[^\\s&]*"
+  - "secret=[^\\s&]*"
+  - "authorization:[^\\r\\n]*"
+  - "bearer [^\\s]*"
+  - "jwt [^\\s]*"
+  - "x-api-key:[^\\r\\n]*"

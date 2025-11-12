@@ -145,6 +145,9 @@ func Critical(msg string, args ...interface{}) {
 	logger.Critical(msg, args...)
 }
 
+// YAML Configuration Factory Functions
+// See config_yaml.go for NewFromYAMLFile, NewFromYAMLString, and NewFromYAMLEnv
+
 func T() Logger {
 	return GetDefaultLogger()
 }
