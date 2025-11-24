@@ -120,6 +120,8 @@ func (ul *unifiedLogger) LogContext(ctx context.Context, level Level, msg string
 		ul.logSlog(ctx, level, message)
 	} else if ul.config.Formatter.Format == JSONFormat {
 		ul.logJSON(level, message, ctx)
+	} else if ul.config.Formatter.Format == CommonLogFormat {
+		ul.logCommonLog(level, message, ctx)
 	} else {
 		ul.logText(level, message)
 	}
@@ -370,4 +372,36 @@ func (ul *unifiedLogger) writeJSON(entry map[string]interface{}) {
 	}
 
 	fmt.Fprintln(ul.config.Output.Writer, string(jsonBytes))
+}
+
+func (ul *unifiedLogger) logCommonLog(level Level, message string, ctx context.Context) {
+	entry := LogEntry{
+		Level:     level,
+		Message:   message,
+		Timestamp: time.Now(),
+		Fields:    ul.buildCommonLogFields(),
+		Context:   ctx,
+	}
+
+	formatter := NewCommonLogFormatter(ul.config.Formatter)
+	output, err := formatter.Format(entry)
+	if err != nil {
+		return
+	}
+
+	fmt.Fprint(ul.config.Output.Writer, string(output))
+}
+
+func (ul *unifiedLogger) buildCommonLogFields() map[string]interface{} {
+	fields := make(map[string]interface{})
+
+	for k, v := range ul.config.Core.StaticFields {
+		fields[k] = v
+	}
+
+	for k, v := range ul.fields {
+		fields[k] = v
+	}
+
+	return fields
 }

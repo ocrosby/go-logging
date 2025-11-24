@@ -9,7 +9,8 @@ import (
 type OutputFormat int
 
 const (
-	TextFormat OutputFormat = iota
+	CommonLogFormat OutputFormat = iota
+	TextFormat
 	JSONFormat
 )
 
@@ -87,6 +88,11 @@ func (b *ConfigBuilder) WithJSONFormat() *ConfigBuilder {
 
 func (b *ConfigBuilder) WithTextFormat() *ConfigBuilder {
 	b.builder.WithTextFormat()
+	return b
+}
+
+func (b *ConfigBuilder) WithCommonLogFormat() *ConfigBuilder {
+	b.builder.WithCommonLogFormat()
 	return b
 }
 

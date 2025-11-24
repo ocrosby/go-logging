@@ -93,7 +93,7 @@ type FormatterConfigBuilder struct {
 func NewFormatterConfig() *FormatterConfigBuilder {
 	return &FormatterConfigBuilder{
 		config: &FormatterConfig{
-			Format:         TextFormat,
+			Format:         CommonLogFormat,
 			IncludeFile:    true,
 			IncludeTime:    true,
 			UseShortFile:   true,
@@ -114,6 +114,11 @@ func (b *FormatterConfigBuilder) WithJSONFormat() *FormatterConfigBuilder {
 
 func (b *FormatterConfigBuilder) WithTextFormat() *FormatterConfigBuilder {
 	b.config.Format = TextFormat
+	return b
+}
+
+func (b *FormatterConfigBuilder) WithCommonLogFormat() *FormatterConfigBuilder {
+	b.config.Format = CommonLogFormat
 	return b
 }
 
@@ -260,5 +265,10 @@ func (b *LoggerConfigBuilder) WithJSONFormat() *LoggerConfigBuilder {
 
 func (b *LoggerConfigBuilder) WithTextFormat() *LoggerConfigBuilder {
 	b.config.Formatter.Format = TextFormat
+	return b
+}
+
+func (b *LoggerConfigBuilder) WithCommonLogFormat() *LoggerConfigBuilder {
+	b.config.Formatter.Format = CommonLogFormat
 	return b
 }

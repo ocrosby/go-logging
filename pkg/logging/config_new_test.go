@@ -81,8 +81,8 @@ func TestNewFormatterConfig(t *testing.T) {
 	builder := NewFormatterConfig()
 	config := builder.Build()
 
-	if config.Format != TextFormat {
-		t.Errorf("expected default format %v, got %v", TextFormat, config.Format)
+	if config.Format != CommonLogFormat {
+		t.Errorf("expected default format %v, got %v", CommonLogFormat, config.Format)
 	}
 
 	if !config.IncludeFile {

@@ -447,3 +447,120 @@ func TestFormattersWithMinimalFields(t *testing.T) {
 		t.Error("expected message in console output")
 	}
 }
+
+func TestNewCommonLogFormatter(t *testing.T) {
+	formatter := NewCommonLogFormatter(nil)
+	if formatter == nil {
+		t.Fatal("expected formatter to be created with nil config")
+	}
+
+	config := NewFormatterConfig().Build()
+	formatter2 := NewCommonLogFormatter(config)
+	if formatter2 == nil {
+		t.Fatal("expected formatter to be created with custom config")
+	}
+
+	if formatter2.config != config {
+		t.Error("expected formatter to use provided config")
+	}
+}
+
+func TestCommonLogFormatter_Format(t *testing.T) {
+	formatter := NewCommonLogFormatter(nil)
+
+	entry := LogEntry{
+		Level:     InfoLevel,
+		Message:   "GET /index.html HTTP/1.1",
+		Timestamp: time.Date(2025, 5, 1, 7, 20, 10, 0, time.UTC),
+		Fields: map[string]interface{}{
+			"host":     "127.0.0.1",
+			"ident":    "-",
+			"authuser": "alice",
+			"request":  "GET /index.html HTTP/1.1",
+			"status":   "200",
+			"bytes":    "9481",
+		},
+		Context: context.Background(),
+	}
+
+	data, err := formatter.Format(entry)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := string(data)
+	expected := "127.0.0.1 - alice [01/May/2025:07:20:10 +0000] \"GET /index.html HTTP/1.1\" 200 9481\n"
+
+	if output != expected {
+		t.Errorf("expected:\n%s\ngot:\n%s", expected, output)
+	}
+}
+
+func TestCommonLogFormatter_Format_WithDefaults(t *testing.T) {
+	formatter := NewCommonLogFormatter(nil)
+
+	entry := LogEntry{
+		Level:     InfoLevel,
+		Message:   "test request",
+		Timestamp: time.Date(2025, 5, 1, 7, 20, 10, 0, time.UTC),
+		Context:   context.Background(),
+	}
+
+	data, err := formatter.Format(entry)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := string(data)
+
+	if !strings.Contains(output, "- - -") {
+		t.Error("expected default dash values for missing fields")
+	}
+
+	if !strings.Contains(output, "[01/May/2025:07:20:10 +0000]") {
+		t.Error("expected timestamp in Common Log Format")
+	}
+
+	if !strings.Contains(output, "\"test request\"") {
+		t.Error("expected message as request line")
+	}
+}
+
+func TestCommonLogFormatter_Format_PartialFields(t *testing.T) {
+	formatter := NewCommonLogFormatter(nil)
+
+	entry := LogEntry{
+		Level:     InfoLevel,
+		Message:   "POST /api/users HTTP/1.1",
+		Timestamp: time.Date(2025, 11, 24, 10, 30, 0, 0, time.FixedZone("EST", -5*3600)),
+		Fields: map[string]interface{}{
+			"host":   "192.168.1.100",
+			"status": 201,
+			"bytes":  512,
+		},
+		Context: context.Background(),
+	}
+
+	data, err := formatter.Format(entry)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := string(data)
+
+	if !strings.Contains(output, "192.168.1.100") {
+		t.Error("expected host IP in output")
+	}
+
+	if !strings.Contains(output, "- -") {
+		t.Error("expected default dashes for ident and authuser")
+	}
+
+	if !strings.Contains(output, "201") {
+		t.Error("expected status code in output")
+	}
+
+	if !strings.Contains(output, "512") {
+		t.Error("expected byte count in output")
+	}
+}

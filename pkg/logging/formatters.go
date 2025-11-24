@@ -264,3 +264,40 @@ func (f *ConsoleFormatter) addFieldsConsole(parts *[]string, entry LogEntry) {
 func (f *ConsoleFormatter) applyRedaction(message string) string {
 	return internal.ApplyRedactionPatterns(message, f.config.RedactPatterns)
 }
+
+// CommonLogFormatter formats log entries in the NCSA Common Log Format.
+type CommonLogFormatter struct {
+	config *FormatterConfig
+}
+
+// NewCommonLogFormatter creates a new Common Log Format formatter.
+func NewCommonLogFormatter(config *FormatterConfig) *CommonLogFormatter {
+	if config == nil {
+		config = NewFormatterConfig().Build()
+	}
+	return &CommonLogFormatter{config: config}
+}
+
+// Format formats a log entry according to Common Log Format.
+// Format: host ident authuser [timestamp] "request-line" status bytes
+func (f *CommonLogFormatter) Format(entry LogEntry) ([]byte, error) {
+	host := f.getField(entry, "host", "-")
+	ident := f.getField(entry, "ident", "-")
+	authuser := f.getField(entry, "authuser", "-")
+	timestamp := entry.Timestamp.Format("02/Jan/2006:15:04:05 -0700")
+	requestLine := f.getField(entry, "request", entry.Message)
+	status := f.getField(entry, "status", "-")
+	bytes := f.getField(entry, "bytes", "-")
+
+	result := fmt.Sprintf("%s %s %s [%s] \"%s\" %s %s\n",
+		host, ident, authuser, timestamp, requestLine, status, bytes)
+
+	return []byte(result), nil
+}
+
+func (f *CommonLogFormatter) getField(entry LogEntry, key string, defaultValue string) string {
+	if value, ok := entry.Fields[key]; ok {
+		return fmt.Sprintf("%v", value)
+	}
+	return defaultValue
+}
