@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -15,45 +16,41 @@ const clfTimeFormat = "02/Jan/2006:15:04:05 -0700"
 
 var bytePool = sync.Pool{
 	New: func() interface{} {
-		b := make([]byte, 0, 256)
+		b := make([]byte, 0, 128)
 		return &b
 	},
 }
 
-type timestampCache struct {
-	mu     sync.RWMutex
+type timestampEntry struct {
 	last   time.Time
 	cached string
 }
 
-var tsCache timestampCache
+var tsCache atomic.Value
+
+func init() {
+	tsCache.Store(timestampEntry{})
+}
 
 func formatTimestamp(t time.Time) string {
 	t = t.Truncate(time.Second)
 
-	tsCache.mu.RLock()
-	if t.Equal(tsCache.last) {
-		cached := tsCache.cached
-		tsCache.mu.RUnlock()
-		return cached
+	if entry, ok := tsCache.Load().(timestampEntry); ok {
+		if t.Equal(entry.last) {
+			return entry.cached
+		}
 	}
-	tsCache.mu.RUnlock()
 
 	formatted := t.Format(clfTimeFormat)
-
-	tsCache.mu.Lock()
-	tsCache.last = t
-	tsCache.cached = formatted
-	tsCache.mu.Unlock()
-
+	tsCache.Store(timestampEntry{last: t, cached: formatted})
 	return formatted
 }
 
 type CommonLogFormatHandler struct {
-	mu      sync.Mutex
-	writer  io.Writer
-	attrMap map[string]slog.Value
-	groups  []string
+	mu        sync.Mutex
+	writer    io.Writer
+	attrCache map[string]string
+	groups    []string
 }
 
 func NewCommonLogFormatHandler(w io.Writer) *CommonLogFormatHandler {
@@ -64,9 +61,9 @@ func NewCommonLogFormatHandler(w io.Writer) *CommonLogFormatHandler {
 	bw := bufio.NewWriterSize(w, 64*1024)
 
 	return &CommonLogFormatHandler{
-		writer:  bw,
-		attrMap: make(map[string]slog.Value),
-		groups:  make([]string, 0),
+		writer:    bw,
+		attrCache: make(map[string]string),
+		groups:    make([]string, 0),
 	}
 }
 
@@ -79,18 +76,47 @@ func (h *CommonLogFormatHandler) Handle(_ context.Context, record slog.Record) e
 	buf := (*bp)[:0]
 	defer bytePool.Put(bp)
 
-	host := h.findAttr("host", "-")
-	ident := h.findAttr("ident", "-")
-	authuser := h.findAttr("authuser", "-")
+	host := "-"
+	if v, ok := h.attrCache["host"]; ok {
+		host = v
+	}
+
+	ident := "-"
+	if v, ok := h.attrCache["ident"]; ok {
+		ident = v
+	}
+
+	authuser := "-"
+	if v, ok := h.attrCache["authuser"]; ok {
+		authuser = v
+	}
 
 	timestamp := formatTimestamp(record.Time)
 
-	method := h.findAttr("method", "GET")
-	path := h.findAttr("path", "/")
-	protocol := h.findAttr("protocol", "HTTP/1.1")
+	method := "GET"
+	if v, ok := h.attrCache["method"]; ok {
+		method = v
+	}
 
-	status := h.findAttr("status", "200")
-	bytes := h.findAttr("bytes", "0")
+	path := "/"
+	if v, ok := h.attrCache["path"]; ok {
+		path = v
+	}
+
+	protocol := "HTTP/1.1"
+	if v, ok := h.attrCache["protocol"]; ok {
+		protocol = v
+	}
+
+	status := "200"
+	if v, ok := h.attrCache["status"]; ok {
+		status = v
+	}
+
+	bytes := "0"
+	if v, ok := h.attrCache["bytes"]; ok {
+		bytes = v
+	}
 
 	buf = append(buf, host...)
 	buf = append(buf, ' ')
@@ -118,27 +144,21 @@ func (h *CommonLogFormatHandler) Handle(_ context.Context, record slog.Record) e
 	return err
 }
 
-func (h *CommonLogFormatHandler) findAttr(key string, defaultValue string) string {
-	if val, ok := h.attrMap[key]; ok {
-		return val.String()
-	}
-	return defaultValue
-}
-
 func (h *CommonLogFormatHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	newAttrMap := make(map[string]slog.Value, len(h.attrMap)+len(attrs))
-	for k, v := range h.attrMap {
-		newAttrMap[k] = v
+	newAttrCache := make(map[string]string, len(h.attrCache)+len(attrs))
+
+	for k, v := range h.attrCache {
+		newAttrCache[k] = v
 	}
 
 	for _, attr := range attrs {
-		newAttrMap[attr.Key] = attr.Value
+		newAttrCache[attr.Key] = attr.Value.String()
 	}
 
 	return &CommonLogFormatHandler{
-		writer:  h.writer,
-		attrMap: newAttrMap,
-		groups:  h.groups,
+		writer:    h.writer,
+		attrCache: newAttrCache,
+		groups:    h.groups,
 	}
 }
 
@@ -148,9 +168,9 @@ func (h *CommonLogFormatHandler) WithGroup(name string) slog.Handler {
 	newGroups[len(h.groups)] = name
 
 	return &CommonLogFormatHandler{
-		writer:  h.writer,
-		attrMap: h.attrMap,
-		groups:  newGroups,
+		writer:    h.writer,
+		attrCache: h.attrCache,
+		groups:    newGroups,
 	}
 }
 
@@ -214,7 +234,7 @@ func DemoCommonLogFormat() {
 	fmt.Println("\n✅ Common Log Format is a custom pluggable backend!")
 	fmt.Println("✅ Can be used with any HTTP server for access logs")
 	fmt.Println("✅ Compatible with standard log analysis tools (Webalizer, Analog)")
-	fmt.Println("✅ High-performance: zero-copy writes, timestamp caching, lock-free reads")
+	fmt.Println("✅ Ultra high-performance: atomic timestamp cache, pre-computed strings, inlined lookups")
 }
 
 func DemoCommonLogFormatWithLoggingLibrary() {

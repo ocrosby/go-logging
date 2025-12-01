@@ -117,24 +117,25 @@ The CLF handler demonstrates high-performance logging techniques:
 
 **Benchmark Results** (Apple M3 Pro):
 ```
-BenchmarkCLFHandler-12              5043409    233.7 ns/op      0 B/op    0 allocs/op
-BenchmarkCLFHandlerParallel-12      6535747    184.9 ns/op      0 B/op    0 allocs/op
-BenchmarkCLFHandlerWithAttrs-12     2994426    396.3 ns/op    464 B/op    3 allocs/op
+BenchmarkCLFHandler-12              5182425    225.2 ns/op      0 B/op    0 allocs/op
+BenchmarkCLFHandlerParallel-12      6219008    175.1 ns/op      0 B/op    0 allocs/op
+BenchmarkCLFHandlerWithAttrs-12     2995714    397.7 ns/op    400 B/op    3 allocs/op
 ```
 
 **Key Optimizations:**
-1. **Byte slice pool** - Zero-allocation writes by reusing byte slices
-2. **Lock-free attribute reads** - Immutable attrMap eliminates read locks
-3. **Timestamp caching** - Caches formatted timestamp per second
-4. **Map-based attribute storage** - O(1) lookups instead of O(n) slice iteration
+1. **Byte slice pool (128B)** - Zero-allocation writes with optimal cache locality
+2. **Atomic timestamp cache** - Lock-free timestamp caching using `atomic.Value`
+3. **Pre-computed attribute strings** - Caches `.String()` calls in `WithAttrs`
+4. **Inlined attribute lookups** - Direct map access eliminates function call overhead
 5. **Buffered writer (64KB)** - Reduces syscalls by batching writes
 6. **Direct byte appends** - No string concatenation or `fmt.Sprintf`
 
-**Performance Comparison:**
+**Performance Evolution:**
 - **Initial version**: ~2500 ns/op, 1500+ B/op, 20+ allocs/op
-- **First optimization pass**: ~468 ns/op, 368 B/op, 6 allocs/op (5x faster)
-- **Final optimization pass**: ~234 ns/op, 0 B/op, 0 allocs/op (10x faster)
-- **Total improvement**: **10x faster, 100% zero-allocation, eliminates all allocations**
+- **First pass (pooling)**: ~468 ns/op, 368 B/op, 6 allocs/op (5x faster)
+- **Second pass (zero-alloc)**: ~234 ns/op, 0 B/op, 0 allocs/op (10x faster)
+- **Final pass (micro-opts)**: ~225 ns/op, 0 B/op, 0 allocs/op (11x faster)
+- **Total improvement**: **11x faster, 100% zero-allocation, sub-200ns in parallel**
 
 These techniques can be applied to any custom handler implementation.
 
