@@ -84,6 +84,14 @@ A collection of examples showing the simplified logging interface:
 - Performance optimizations with slog
 - **Best for**: Go 1.21+ applications, performance-critical logging, slog ecosystem integration
 
+### [`pluggable-backends/`](pluggable-backends/) - Pluggable Backend Architecture
+**Demonstrates the core pluggability concept**
+- Side-by-side comparison of slog, zerolog, and zap backends
+- Shows how the same Logger interface works with different backends
+- Complete working examples with each backend
+- Interface consistency demonstration
+- **Best for**: Understanding pluggable architecture, choosing a backend, performance evaluation
+
 ### [`di/`](di/) - Dependency Injection
 - Google Wire integration for dependency injection
 - Logger as an injected dependency
@@ -114,7 +122,7 @@ A collection of examples showing the simplified logging interface:
 | **First time using the library** | [`basic/`](basic/) | Simple setup, multiple patterns |
 | **Simple web application** | [`simple/quick-start/`](simple/quick-start/) + [`simple/middleware/`](simple/middleware/) | Zero config + HTTP middleware |
 | **Microservice** | [`yaml-config/`](yaml-config/) | Production preset, structured logging |
-| **High-performance application** | [`slog/`](slog/) + [`simple/async/`](simple/async/) | slog backend + async processing |
+| **High-performance application** | [`pluggable-backends/`](pluggable-backends/) + [`simple/async/`](simple/async/) | Choose optimal backend + async processing |
 | **Complex enterprise application** | [`yaml-config/`](yaml-config/) + [`di/`](di/) | YAML config + dependency injection |
 | **API with tracing** | [`simple/context-logging/`](simple/context-logging/) | Request tracing, context propagation |
 | **Custom logging requirements** | [`custom-handlers/`](custom-handlers/) | Custom handlers, advanced routing |
@@ -124,7 +132,7 @@ A collection of examples showing the simplified logging interface:
 | Level | Examples | When to Use |
 |-------|----------|-------------|
 | **Beginner** | `basic/`, `simple/quick-start/` | Learning the library, simple apps |
-| **Intermediate** | `simple/*`, `fluent/`, `yaml-config/` | Production apps, structured logging |
+| **Intermediate** | `simple/*`, `fluent/`, `yaml-config/`, `pluggable-backends/` | Production apps, structured logging |
 | **Advanced** | `custom-handlers/`, `di/`, `new-architecture/` | Custom requirements, large systems |
 
 ## 🏃‍♂️ Running the Examples
@@ -164,8 +172,9 @@ Some examples may require additional setup:
 3. **Structure**: [`simple/structured/`](simple/structured/) - Add structured logging
 4. **Configure**: [`yaml-config/`](yaml-config/) - Use powerful YAML configuration
 5. **Integrate**: [`http-server/`](http-server/) or [`simple/middleware/`](simple/middleware/) - Add to web apps
-6. **Optimize**: [`slog/`](slog/) - Use high-performance backend
-7. **Customize**: [`custom-handlers/`](custom-handlers/) - Advanced customization
+6. **Choose Backend**: [`pluggable-backends/`](pluggable-backends/) - Pick the right backend for your needs
+7. **Optimize**: [`slog/`](slog/) - Use high-performance backend
+8. **Customize**: [`custom-handlers/`](custom-handlers/) - Advanced customization
 
 ## 🎯 Best Practices Demonstrated
 
