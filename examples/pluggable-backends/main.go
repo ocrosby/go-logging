@@ -13,9 +13,11 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Pluggable Backend Examples ===\n")
+	fmt.Println("=== Pluggable Backend Examples ===")
+	fmt.Println()
 	fmt.Println("This demonstrates how you can use different logging backends")
-	fmt.Println("(slog, zerolog, zap, custom) while maintaining the same Logger interface.\n")
+	fmt.Println("(slog, zerolog, zap, custom) while maintaining the same Logger interface.")
+	fmt.Println()
 
 	exampleStandardSlog()
 	fmt.Println()
@@ -101,7 +103,8 @@ func exampleZap() {
 
 func demonstrateInterfaceConsistency() {
 	fmt.Println("--- 4. Interface Consistency Demo ---")
-	fmt.Println("Notice: All three loggers use the SAME interface\n")
+	fmt.Println("Notice: All three loggers use the SAME interface")
+	fmt.Println()
 
 	backends := []struct {
 		name    string

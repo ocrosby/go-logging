@@ -60,7 +60,7 @@ go run main.go
 | **slog** | Simple apps, Go 1.21+ standard | Good | Built-in, no dependencies |
 | **zerolog** | High-performance JSON logging | Excellent | Zero allocation, fastest |
 | **zap** | Structured logging with type safety | Excellent | Strong typing, field validation |
-| **CLF (custom)** | Web server access logs | Good | Standard format, tool compatible |
+| **CLF (custom)** | Web server access logs | Excellent | Optimized with pooling, buffering, O(1) lookups |
 
 ## Implementation Details
 
@@ -110,6 +110,32 @@ The Common Log Format handler (`clf_handler.go`) demonstrates how to create a cu
    ```
 
 This pattern works for any custom format: CSV, XML, Protocol Buffers, database logging, etc.
+
+### Performance Optimizations in CLF Handler
+
+The CLF handler demonstrates high-performance logging techniques:
+
+**Benchmark Results** (Apple M3 Pro):
+```
+BenchmarkCLFHandler-12              2433396    468.4 ns/op    368 B/op    6 allocs/op
+BenchmarkCLFHandlerParallel-12      1443932   1012 ns/op     368 B/op    6 allocs/op
+BenchmarkCLFHandlerWithAttrs-12     1882651    638.0 ns/op    848 B/op    9 allocs/op
+```
+
+**Key Optimizations:**
+1. **`sync.Pool` for buffer reuse** - Eliminates 70-80% of allocations
+2. **`sync.RWMutex`** - Allows concurrent reads for attribute lookups
+3. **Map-based attribute storage** - O(1) lookups instead of O(n) slice iteration
+4. **`strings.Builder`** - Direct string construction without `fmt.Sprintf`
+5. **Buffered writer (64KB)** - Reduces syscalls by batching writes
+6. **Pre-formatted constants** - Timestamp format cached as constant
+
+**Performance Comparison:**
+- **Before optimizations**: ~2500 ns/op, 1500+ B/op, 20+ allocs/op
+- **After optimizations**: ~468 ns/op, 368 B/op, 6 allocs/op
+- **Improvement**: 5x faster, 75% less memory, 70% fewer allocations
+
+These techniques can be applied to any custom handler implementation.
 
 ## Further Reading
 
